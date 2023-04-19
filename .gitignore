@@ -22,6 +22,6 @@
 # ...even if they are in subdirectories
 !*/
 
-!/static/**/*
+!/client/**/*
 
-/static/dist
+/client/dist
