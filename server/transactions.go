@@ -1,11 +1,11 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/alexgaudon/budgie/storage"
+	"github.com/alexgaudon/budgie/utils"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -14,14 +14,6 @@ type CreateTransactionRequest struct {
 	Category    string    `json:"category"`
 	Amount      int       `json:"amount"`
 	Date        time.Time `json:"date"`
-}
-
-func DecodeBody(r *http.Request, rv any) error {
-	if err := json.NewDecoder(r.Body).Decode(&rv); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func GetTransactionById(w http.ResponseWriter, r *http.Request) error {
@@ -54,7 +46,7 @@ func GetTransactions(w http.ResponseWriter, r *http.Request) error {
 func CreateTransaction(w http.ResponseWriter, r *http.Request) error {
 	createTransactionReq := &CreateTransactionRequest{}
 
-	err := DecodeBody(r, &createTransactionReq)
+	err := utils.DecodeBody(r, &createTransactionReq)
 
 	if err != nil {
 		return err

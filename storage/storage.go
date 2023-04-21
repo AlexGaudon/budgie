@@ -63,5 +63,10 @@ func (s *PostgresStore) Init() error {
 		return err
 	}
 
+	err = s.createBudgetTable()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

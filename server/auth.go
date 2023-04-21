@@ -41,8 +41,15 @@ func RefreshAccessToken(w http.ResponseWriter, r *http.Request) error {
 
 	setAccessToken(w, sub)
 
+	user, err := storage.DB.GetUserById(sub)
+
+	if err != nil {
+		return err
+	}
+
 	return WriteJSON(w, http.StatusOK, JSON{
-		"message": "access token refreshed",
+		"userId":   user.ID,
+		"username": user.Username,
 	})
 }
 
@@ -94,7 +101,7 @@ func setAccessToken(w http.ResponseWriter, userId string) error {
 func Login(w http.ResponseWriter, r *http.Request) error {
 	loginRequest := LoginRequest{}
 
-	err := DecodeBody(r, &loginRequest)
+	err := utils.DecodeBody(r, &loginRequest)
 
 	if err != nil {
 		return err
@@ -139,14 +146,15 @@ func Login(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return WriteJSON(w, http.StatusOK, JSON{
-		"message": "logged in successfully",
+		"userId":   user.ID,
+		"username": user.Username,
 	})
 }
 
 func Register(w http.ResponseWriter, r *http.Request) error {
 	registerRequest := RegisterRequest{}
 
-	err := DecodeBody(r, &registerRequest)
+	err := utils.DecodeBody(r, &registerRequest)
 
 	if err != nil {
 		return err

@@ -83,10 +83,14 @@ func SetupServer() *chi.Mux {
 		r.Delete("/{id}", WithUser(makeHandlerFunc(DeleteTransaction)))
 	})
 
+	r.Route("/api/budgets", func(r chi.Router) {
+		r.Get("/", WithUser(makeHandlerFunc(GetBudgets)))
+	})
+
 	r.Route("/api/user", func(r chi.Router) {
 		r.Post("/register", makeHandlerFunc(Register))
 		r.Post("/login", makeHandlerFunc(Login))
-		r.Get("/refresh", makeHandlerFunc(RefreshAccessToken))
+		r.Get("/me", makeHandlerFunc(RefreshAccessToken))
 		r.Get("/logout", makeHandlerFunc(Logout))
 	})
 
