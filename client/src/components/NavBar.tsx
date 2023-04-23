@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
@@ -26,6 +27,12 @@ const NavLink: React.FC<NavLinkProps> = ({ to, exact = false, children }) => {
 
 export const NavBar: React.FC = () => {
     let auth = useAuth();
+    const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const toggleMobileMenu = () => {
+        setMobileMenuOpen(!isMobileMenuOpen);
+    };
+
     return (
         <nav className="bg-gray-800 stick top-0 w-full border-b-2 border-slate-800 shadow-md">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,7 +60,32 @@ export const NavBar: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div className="md:hidden">
+                        <button
+                            className="text-gray-400 hover:text-white focus:outline-none focus:text-white"
+                            onClick={toggleMobileMenu}
+                        >
+                            <svg
+                                className="h-6 w-6"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d={
+                                        isMobileMenuOpen
+                                            ? "M6 18L18 6M6 6l12 12"
+                                            : "M4 6h16M4 12h16M4 18h16"
+                                    }
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div className="hidden md:block">
                         {!auth.isLoggedIn && (
                             <Link
                                 to="/login"
@@ -77,6 +109,52 @@ export const NavBar: React.FC = () => {
                     </div>
                 </div>
             </div>
+            {isMobileMenuOpen && (
+                <div className="md:hidden">
+                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                        <NavLink to="/" exact>
+                            Home
+                        </NavLink>
+                        {auth.isLoggedIn && (
+                            <>
+                                <NavLink to="/budgets">Budgets</NavLink>
+                                <NavLink to="/transactions">
+                                    Transactions
+                                </NavLink>
+                            </>
+                        )}
+                    </div>
+                    <div className="pt-4 pb-3 border-t border-gray-700">
+                        {!auth.isLoggedIn && (
+                            <div className="flex items-center px-4">
+                                <Link
+                                    to="/login"
+                                    className="text-gray-400 hover:text-white mr-4"
+                                >
+                                    <span className="text-sm font-medium">
+                                        Login
+                                    </span>
+                                </Link>
+                            </div>
+                        )}
+                        {auth.isLoggedIn && (
+                            <div className="flex items-center px-4">
+                                <Link
+                                    to="/"
+                                    className="text-gray-400 hover:text-white mr-4"
+                                    onClick={() => {
+                                        auth.logout();
+                                    }}
+                                >
+                                    <span className="text-sm font-medium">
+                                        Logout
+                                    </span>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };

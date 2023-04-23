@@ -1,31 +1,27 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
 
-/*
-{
-    "description": "Sobeys2",
-    "category": "groceries",
-    "amount": 10503,
-    "date": "2023-04-15T00:00:00Z"
-}
-*/
+import { useTransactions } from "../hooks/useTransactions";
 
 const createTransactionSchema = z.object({
     description: z.string(),
     category: z.string(),
     amount: z.string(),
     date: z.string(),
+    type: z.string().refine(
+        (str) => {
+            return str == "income" || str == "expense";
+        },
+        {
+            message: 'Type must be equal to "income" or "expense"',
+        }
+    ),
 });
 
-type CreateTransactionForm = z.infer<typeof createTransactionSchema>;
+export type CreateTransactionForm = z.infer<typeof createTransactionSchema>;
 
-export const CreateTransaction = ({
-    onCreateTransaction,
-}: {
-    onCreateTransaction: () => void;
-}) => {
+export const CreateTransaction = () => {
     const {
         register,
         handleSubmit,
@@ -35,33 +31,16 @@ export const CreateTransaction = ({
         resolver: zodResolver(createTransactionSchema),
         defaultValues: {
             date: new Date().toISOString().substring(0, 10),
+            type: "expense",
         },
     });
 
+    const { createTransaction, refreshTransactions } = useTransactions();
+
     const onSubmit: SubmitHandler<CreateTransactionForm> = async (data) => {
-        console.log(data);
+        await createTransaction(data);
 
-        let res = await fetch("/api/transactions", {
-            method: "POST",
-            body: JSON.stringify({
-                description: data.description,
-                category: data.category,
-                amount: ((Number.parseFloat(data.amount) * 50) / 50) * 100,
-                date: new Date(data.date),
-            }),
-            headers: {
-                Authorization: window.localStorage.token,
-            },
-        });
-
-        if (res.ok) {
-            let json = await res.json();
-            console.log(json);
-            onCreateTransaction();
-            reset();
-        }
-
-        console.log(await res.json());
+        refreshTransactions();
     };
 
     return (
@@ -88,11 +67,10 @@ export const CreateTransaction = ({
                     })}
                     className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                {errors.amount && errors.amount.message}
+
                 <input
                     autoComplete="off"
                     type="number"
-                    min="0"
                     step="0.01"
                     placeholder="Amount"
                     {...register("amount", {
@@ -113,9 +91,28 @@ export const CreateTransaction = ({
                     className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
 
+                <label htmlFor="field-expense">
+                    <input
+                        {...register("type")}
+                        type="radio"
+                        value="expense"
+                        id="field-expense"
+                    />
+                    Expense
+                </label>
+                <label htmlFor="field-income">
+                    <input
+                        {...register("type")}
+                        type="radio"
+                        value="income"
+                        id="field-income"
+                    />
+                    Income
+                </label>
+
                 <input
                     type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor-pointer"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor:pointer"
                 />
             </form>
         </div>

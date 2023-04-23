@@ -1,83 +1,71 @@
-import { useEffect, useState } from "react";
-import { type Transaction, transactionSchema } from "../types";
-
-import { z } from "zod";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-
-import { CreateTransaction } from "../components/CreateTransaction";
+import { CreateTransaction } from "../components/oldcreatetransaction";
 import { useAuth } from "../hooks/useAuth";
 
-const transactionResponse = z.object({
-    data: z.array(transactionSchema),
-});
+import { useTransactionStore } from "../store";
 
 export const Transactions = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [refresh, setRefresh] = useState(false);
+    const auth = useAuth();
 
-    let auth = useAuth();
+    const transactionStore = useTransactionStore();
 
-    if (!auth.isLoggedIn && !auth.isLoading) {
-        return <Navigate to="/login" />;
-    }
+    const fetchTransactions = useTransactionStore(
+        (state) => state.fetchTransactions
+    );
 
     useEffect(() => {
-        async function getTransactions() {
-            try {
-                const res = await fetch("/api/transactions", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    const parsedData = transactionResponse.parse(data).data;
-                    setTransactions(parsedData);
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        }
+        fetchTransactions();
+    }, [fetchTransactions]);
 
-        getTransactions();
-    }, [refresh]);
+    if (transactionStore.error) {
+        return <h1>{transactionStore.error}</h1>;
+    }
 
-    const deleteTransaction = async (id: string) => {
-        let res = await fetch(`http://localhost:3000/api/transactions/${id}`, {
-            method: "DELETE",
-        });
-        if (res.ok) {
-            setRefresh((v) => !v);
-        }
-    };
+    if (transactionStore.isLoading) {
+        return <h1>{transactionStore.isLoading}</h1>;
+    }
+
+    if (!auth.isLoading && !auth.isLoggedIn) {
+        return <Navigate to="/"></Navigate>;
+    }
+
+    // const deleteTransaction = async (id: string) => {
+    //     let res = await fetch(`/api/transactions/${id}`, {
+    //         method: "DELETE",
+    //     });
+    //     if (res.ok) {
+    //         refreshTransactions();
+    //     }
+    // };
 
     return (
-        <div>
-            <CreateTransaction
-                onCreateTransaction={() => {
-                    setRefresh((v) => !v);
-                }}
-            ></CreateTransaction>
-
-            {transactions.map((t) => {
-                return (
-                    <div key={t.id}>
-                        <p>({t.id})</p>
-                        <p>
-                            {t.description} for {t.amount} in {t.category}
-                        </p>
+        <div className="container mx-auto px-4 py-8">
+            <h1 className="text-3xl font-bold mb-6">Transactions</h1>
+            <CreateTransaction />
+            <div className="mt-4">
+                {transactionStore.transactions.map((t) => (
+                    <div
+                        key={t.id}
+                        className="border border-gray-300 rounded-md p-4 mb-4 flex justify-between items-center"
+                    >
+                        <div>
+                            <p className="text-gray-600 text-sm">ID: {t.id}</p>
+                            <p>
+                                {t.description} for {t.amount} in {t.category}
+                            </p>
+                        </div>
                         <button
                             onClick={() => {
-                                deleteTransaction(t.id);
+                                transactionStore.deleteTransaction(t);
                             }}
+                            className="px-4 py-2 bg-red-500 text-white rounded-md"
                         >
-                            delete
+                            Delete
                         </button>
-                        <br />
                     </div>
-                );
-            })}
+                ))}
+            </div>
         </div>
     );
 };

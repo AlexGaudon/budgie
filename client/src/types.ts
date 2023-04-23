@@ -12,13 +12,16 @@ const transactionSchema = z.object({
         }
 
         num /= 100;
-
-        // Convert the number to currency format
-        return num.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
-        });
+        return num.toFixed(2);
     }),
+    type: z.string().refine(
+        (str) => {
+            return str == "income" || str == "expense";
+        },
+        {
+            message: 'Type must be equal to "income" or "expense"',
+        }
+    ),
     date: z.string().transform((str) => new Date(str)),
     updated_at: z.string(),
     created_at: z.string(),
@@ -26,6 +29,23 @@ const transactionSchema = z.object({
 });
 
 type Transaction = z.infer<typeof transactionSchema>;
+
+const newTransactionSchema = z.object({
+    description: z.string(),
+    category: z.string(),
+    amount: z.number(),
+    type: z.string().refine(
+        (str) => {
+            return str == "income" || str == "expense";
+        },
+        {
+            message: 'Type must be equal to "income" or "expense"',
+        }
+    ),
+    date: z.string(),
+});
+
+type NewTransaction = z.infer<typeof newTransactionSchema>;
 
 const budgetSchema = z.object({
     id: z.string(),
@@ -66,4 +86,11 @@ const authErrorSchema = z.object({
 
 type AuthError = z.infer<typeof authErrorSchema>;
 
-export { type Transaction, transactionSchema, type Budget, budgetSchema };
+export {
+    type Transaction,
+    transactionSchema,
+    type Budget,
+    budgetSchema,
+    type NewTransaction,
+    newTransactionSchema,
+};

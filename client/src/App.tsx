@@ -3,20 +3,27 @@ import { useAuth } from "./hooks/useAuth";
 
 import { Login } from "./pages/Login";
 
+import LandingPage from "./pages/Landing";
+
+import { Transactions } from "./components/Transactions";
+
 function App() {
     let auth = useAuth();
+
+    if (auth.isLoading) {
+        return <p>Loading...</p>;
+    }
 
     if (auth.user != null) {
         return (
             <div>
                 <h1>Hello {auth.user.username}</h1>
-
-                <h1>DASHBOARD GOES HERE</h1>
+                <br />
+                <Transactions></Transactions>
             </div>
         );
     }
-
-    return <h1>HOME PAGE</h1>;
+    return <LandingPage></LandingPage>;
 }
 
 export default App;

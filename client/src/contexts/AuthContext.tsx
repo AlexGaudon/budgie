@@ -15,6 +15,7 @@ const errorSchema = z.object({
 
 interface AuthContextType {
     isLoggedIn: boolean;
+    isLoading: boolean;
     user: User | null;
     login: (username: string, password: string) => void;
     logout: () => void;
@@ -22,6 +23,7 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType>({
     isLoggedIn: false,
+    isLoading: true,
     user: null,
     login: () => {},
     logout: () => {},
@@ -34,7 +36,7 @@ export const AuthProvider = ({
 }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
 
     const login = async (username: string, password: string) => {
@@ -77,6 +79,7 @@ export const AuthProvider = ({
 
     useEffect(() => {
         const checkAuthenticationStatus = async () => {
+            setIsLoading(true);
             let res = await fetch("/api/user/me");
             if (res.ok) {
                 let body = await res.json();
@@ -89,13 +92,16 @@ export const AuthProvider = ({
                 setUser(null);
                 setIsLoggedIn(false);
             }
+            setIsLoading(false);
         };
 
         checkAuthenticationStatus();
     }, []);
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+        <AuthContext.Provider
+            value={{ isLoggedIn, user, login, logout, isLoading }}
+        >
             {children}
         </AuthContext.Provider>
     );
