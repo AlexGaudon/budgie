@@ -9,6 +9,7 @@ type Transaction struct {
 	Category    string     `json:"category"`
 	Amount      int        `json:"amount"`
 	Date        time.Time  `json:"date"`
+	Type        string     `json:"type"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	DeletedAt   *time.Time `json:"deleted_at"`

@@ -81,6 +81,8 @@ func SetupServer() *chi.Mux {
 		r.Post("/", WithUser(makeHandlerFunc(CreateTransaction)))
 
 		r.Delete("/{id}", WithUser(makeHandlerFunc(DeleteTransaction)))
+
+		r.Put("/{id}", WithUser(makeHandlerFunc(UpdateTransaction)))
 	})
 
 	r.Route("/api/budgets", func(r chi.Router) {
