@@ -16,22 +16,29 @@ import { Login } from "./pages/Login";
 import { AuthProvider } from "./contexts/AuthContext";
 
 import { Budgets } from "./pages/Budgets";
+import { Categories } from "./pages/Categories";
+import { QueryClient, QueryClientProvider } from "react-query";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
         <Route path="/" element={<Layout />}>
             <Route index element={<App />} />
             <Route path="login" element={<Login />} />
+            <Route path="categories" element={<Categories />} />
             <Route path="budgets" element={<Budgets />} />
             <Route path="transactions" element={<Transactions />} />
         </Route>
     )
 );
 
+const queryClient = new QueryClient();
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <AuthProvider>
-            <RouterProvider router={router} />
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+                <RouterProvider router={router} />
+            </AuthProvider>
+        </QueryClientProvider>
     </React.StrictMode>
 );

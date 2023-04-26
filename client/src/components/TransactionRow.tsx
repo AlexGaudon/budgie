@@ -1,8 +1,8 @@
-import React, { MouseEventHandler, useState } from "react";
+import React, { MouseEventHandler, useEffect, useState } from "react";
 
 import { Transaction } from "../types";
 
-import { z } from "zod";
+import { useCategoriesQuery } from "../hooks/useCategories";
 
 type RowProps = {
     index: number;
@@ -26,14 +26,21 @@ export const TransactionRow = ({
     setEditingIndex,
     editing,
 }: RowProps) => {
+    const { data: categories, isLoading, error } = useCategoriesQuery();
     const [editedRow, setEditedRow] = useState(row);
     const getClasses = () => {
         return "border border-gray-200";
     };
 
     const handleChange = (
-        event: React.ChangeEvent<HTMLInputElement>,
-        field: "date" | "category" | "description" | "amount" | "type"
+        event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+        field:
+            | "date"
+            | "category_id"
+            | "description"
+            | "amount"
+            | "type"
+            | "vendor"
     ) => {
         setEditedRow((prevEditedRow) => {
             const er = { ...prevEditedRow }; // Create a shallow copy of the state object
@@ -64,7 +71,6 @@ export const TransactionRow = ({
 
     return (
         <tr className={getClasses()} onClick={handleRowClick}>
-            <td>{editedRow.id.substring(0, 4)}</td>
             <td className="px-4 py-2 text-left">
                 {editing ? (
                     <input
@@ -83,6 +89,20 @@ export const TransactionRow = ({
                 {editing ? (
                     <input
                         type="text"
+                        value={editedRow.vendor}
+                        onChange={(e) => {
+                            handleChange(e, "vendor");
+                        }}
+                        onBlur={onBlur}
+                    />
+                ) : (
+                    editedRow.vendor
+                )}
+            </td>
+            <td className="px-4 py-2 text-left">
+                {editing ? (
+                    <input
+                        type="text"
                         value={editedRow.description}
                         onChange={(e) => {
                             handleChange(e, "description");
@@ -95,16 +115,25 @@ export const TransactionRow = ({
             </td>
             <td className="px-4 py-2 text-left">
                 {editing ? (
-                    <input
-                        type="text"
-                        value={editedRow.category}
+                    <select
+                        name="category"
+                        id="category"
                         onChange={(e) => {
-                            handleChange(e, "category");
+                            handleChange(e, "category_id");
                         }}
                         onBlur={onBlur}
-                    />
+                        value={editedRow.category_id}
+                    >
+                        {categories?.map((c) => {
+                            return (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            );
+                        })}
+                    </select>
                 ) : (
-                    editedRow.category
+                    editedRow.category_name
                 )}
             </td>
             <td

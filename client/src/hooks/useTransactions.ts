@@ -1,28 +1,41 @@
-import { useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "react-query";
+
 import { z } from "zod";
-import { Transaction, transactionSchema } from "../types";
 
-import { type CreateTransactionForm } from "../components/oldcreatetransaction";
+import { type Transaction, transactionSchema } from "../types";
+import { CreateTransactionForm } from "../components/AddTransaction";
 
-const transactionResponse = z.object({
-    data: z.array(transactionSchema),
-});
+const fetchTransactions = async () => {
+    const res = await fetch("/api/transactions");
 
-export const useTransactions = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [refresh, setRefresh] = useState(false);
+    if (res.ok) {
+        const data = await res.json();
+        if ("data" in data) {
+            const parsed = z.array(transactionSchema).parse(data.data);
+            return parsed;
+        } else {
+            throw new Error("Error fetching transactions");
+        }
+    }
+};
 
-    const createTransaction = async (data: CreateTransactionForm) => {
-        let res = await fetch("/api/transactions", {
+export const useCreateTransactionMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(async (transaction: CreateTransactionForm) => {
+        const res = await fetch("/api/transactions", {
             method: "POST",
             body: JSON.stringify({
-                type: data.type,
-                description: data.description,
-                category: data.category,
+                type: transaction.type,
+                vendor: transaction.vendor,
+                description: transaction.description,
+                category_id: transaction.category,
                 amount: Number(
-                    Math.round(parseFloat(data.amount) * 100).toString()
+                    Math.round(
+                        parseFloat(transaction.amount.toString()) * 100
+                    ).toString()
                 ),
-                date: new Date(data.date),
+                date: new Date(transaction.date),
             }),
             headers: {
                 "Content-Type": "application/json",
@@ -30,50 +43,59 @@ export const useTransactions = () => {
         });
 
         if (res.ok) {
-            let resp = await res.json();
-            if ("data" in resp) {
-                let parsed = transactionSchema.parse(resp.data);
-                setTransactions([...transactions, parsed]);
-                console.log(`PARSED: ${JSON.stringify(parsed)}`);
-            }
+            queryClient.invalidateQueries("transactions");
         } else {
-            let resp = await res.json();
-            console.log(resp);
+            throw new Error("Error creating transaction");
         }
-    };
+    });
+};
 
-    const fetchTransactions = async () => {
-        try {
-            const res = await fetch("/api/transactions", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                const parsedData = transactionResponse.parse(data).data;
-                return parsedData;
-            }
-        } catch (error) {
-            console.log(error);
+export const useUpdateTransactionMutation = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation(async (transaction: Transaction) => {
+        const res = await fetch(`/api/transactions/${transaction.id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                type: transaction.type,
+                vendor: transaction.vendor,
+                description: transaction.description,
+                category_id: transaction.category_id,
+                amount: Number(
+                    Math.round(
+                        parseFloat(transaction.amount.toString()) * 100
+                    ).toString()
+                ),
+                date: new Date(transaction.date),
+            }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (res.ok) {
+            queryClient.invalidateQueries("transactions");
+        } else {
+            throw new Error("Error updating transaction");
         }
-        return [];
-    };
+    });
+};
 
-    useEffect(() => {
-        const refreshTransactions = async () => {
-            let t = await fetchTransactions();
-            setTransactions(t);
-        };
-        refreshTransactions();
-    }, [refresh]);
+export const useDeleteTransactionMutation = () => {
+    const queryClient = useQueryClient();
 
-    return {
-        transactions,
-        refreshTransactions: () => {
-            setRefresh((v) => !v);
-        },
-        createTransaction,
-    };
+    return useMutation(async (transactionId: string) => {
+        const res = await fetch(`/api/transactions/${transactionId}`, {
+            method: "DELETE",
+        });
+        if (res.ok) {
+            queryClient.invalidateQueries("transactions");
+        } else {
+            throw new Error("Error deleting transaction");
+        }
+    });
+};
+
+export const useTransactionQuery = () => {
+    return useQuery("transactions", fetchTransactions);
 };

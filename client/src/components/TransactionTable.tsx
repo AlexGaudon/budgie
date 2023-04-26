@@ -1,30 +1,25 @@
 import { useEffect, useState } from "react";
 import { type Transaction } from "../types";
 
-import { useTransactionStore } from "../store";
 import { TransactionRow } from "./TransactionRow";
 import { AddTransaction } from "./AddTransaction";
+import {
+    useCreateTransactionMutation,
+    useDeleteTransactionMutation,
+    useTransactionQuery,
+    useUpdateTransactionMutation,
+} from "../hooks/useTransactions";
 
-export const Transactions = () => {
+export const TransactionTable = () => {
     const [editingIndex, setEditingIndex] = useState(-1);
-    const transactionStore = useTransactionStore();
-
     const [creatingTransaction, setCreatingTransaction] = useState(false);
 
-    const fetchTransactions = useTransactionStore(
-        (state) => state.fetchTransactions
-    );
+    const { data: transactions, isLoading, error } = useTransactionQuery();
+    const updateTransaction = useUpdateTransactionMutation();
+    const deleteTransaction = useDeleteTransactionMutation();
 
-    useEffect(() => {
-        fetchTransactions();
-    }, [fetchTransactions]);
-
-    if (transactionStore.error) {
-        return <h1>{transactionStore.error}</h1>;
-    }
-
-    if (transactionStore.isLoading) {
-        return <h1>{transactionStore.isLoading}</h1>;
+    if (isLoading) {
+        return <h1>isloading</h1>;
     }
 
     const onRowEvent = async (
@@ -33,9 +28,10 @@ export const Transactions = () => {
     ) => {
         if (eventType === "edit" || eventType === "delete") {
             if (eventType === "edit") {
-                transactionStore.updateTransaction(subject);
+                console.log(subject);
+                updateTransaction.mutateAsync(subject);
             } else {
-                transactionStore.deleteTransaction(subject);
+                deleteTransaction.mutateAsync(subject.id);
             }
         }
     };
@@ -45,7 +41,7 @@ export const Transactions = () => {
     };
 
     return (
-        <div>
+        <div className="w-8/12">
             <div className="container m-8">
                 {(creatingTransaction && (
                     <AddTransaction
@@ -65,8 +61,8 @@ export const Transactions = () => {
             <table className="table-auto w-full">
                 <thead>
                     <tr className="border">
-                        <th className="text-left px-4 py-2">Id</th>
                         <th className="text-left px-4 py-2">Date</th>
+                        <th className="text-left px-4 py-2">Vendor</th>
                         <th className="text-left px-4 py-2">Description</th>
                         <th className="text-left px-4 py-2">Category</th>
                         <th className="text-left px-4 py-2">Amount</th>
@@ -74,7 +70,7 @@ export const Transactions = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {transactionStore.transactions.map((row, index) => {
+                    {transactions?.map((row, index) => {
                         return (
                             <TransactionRow
                                 key={row.id}

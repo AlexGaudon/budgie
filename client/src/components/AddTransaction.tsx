@@ -1,17 +1,20 @@
-import { useState } from "react";
-import { useTransactionStore } from "../store";
-
-import { type NewTransaction } from "../types";
+import { useEffect } from "react";
 
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useCategoriesQuery } from "../hooks/useCategories";
+import {
+    useCreateTransactionMutation,
+    useTransactionQuery,
+} from "../hooks/useTransactions";
 
 type NewTransactionProps = {
     onFinish: () => void;
 };
 
 const createTransactionSchema = z.object({
+    vendor: z.string(),
     description: z.string(),
     category: z.string(),
     amount: z.string(),
@@ -42,28 +45,62 @@ export const AddTransaction = ({ onFinish }: NewTransactionProps) => {
         },
     });
 
-    const transactionStore = useTransactionStore();
+    const {
+        data: transactions,
+        isLoading: transactionLoading,
+        error: transactionError,
+    } = useTransactionQuery();
+
+    const {
+        data: categories,
+        isLoading: categoryLoading,
+        error: categoryError,
+    } = useCategoriesQuery();
+
+    const createTransactionMutation = useCreateTransactionMutation();
+
+    if (transactionLoading || categoryLoading) {
+        return <h1>Loading...</h1>;
+    }
 
     const onSubmit: SubmitHandler<CreateTransactionForm> = async (data) => {
-        transactionStore.createTransaction({
+        let input = {
+            vendor: data.vendor,
             description: data.description,
             category: data.category,
             amount: data.amount,
             type: data.type,
             date: data.date,
-        });
+        };
+
+        await createTransactionMutation.mutateAsync(input);
+
+        onFinish();
     };
 
     return (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full w-8/12">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
+                    <label htmlFor="vendor">Vendor</label>
+                    <input
+                        id="vendor"
+                        autoComplete="off"
+                        type="text"
+                        placeholder="Walmart"
+                        {...register("vendor", {
+                            required: true,
+                            maxLength: 80,
+                        })}
+                        className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
                     <label htmlFor="description">Description</label>
                     <input
                         id="description"
                         autoComplete="off"
                         type="text"
-                        placeholder="Walmart"
+                        placeholder="Snacks"
                         {...register("description", {
                             required: true,
                             maxLength: 80,
@@ -72,17 +109,22 @@ export const AddTransaction = ({ onFinish }: NewTransactionProps) => {
                     />
 
                     <label htmlFor="category">Category</label>
-                    <input
+                    <select
                         id="category"
-                        autoComplete="off"
-                        type="text"
-                        placeholder="Groceries"
+                        className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         {...register("category", {
                             required: true,
                             maxLength: 80,
                         })}
-                        className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    >
+                        {categories?.map((c) => {
+                            return (
+                                <option key={c.id} value={c.id}>
+                                    {c.name}
+                                </option>
+                            );
+                        })}
+                    </select>
 
                     <label htmlFor="amount">Amount</label>
                     <input
@@ -90,7 +132,7 @@ export const AddTransaction = ({ onFinish }: NewTransactionProps) => {
                         autoComplete="off"
                         type="number"
                         step="0.01"
-                        placeholder="159.40"
+                        placeholder="0.00"
                         {...register("amount", {
                             required: true,
                             maxLength: 80,

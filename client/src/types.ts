@@ -1,10 +1,12 @@
-import { z } from "zod";
+import { TypeOf, z } from "zod";
 
 const transactionSchema = z.object({
     id: z.string(),
     userid: z.string(),
+    vendor: z.string(),
     description: z.string(),
-    category: z.string(),
+    category_id: z.string(),
+    category_name: z.string(),
     amount: z.number().transform((num) => {
         // Check if the input number is valid
         if (isNaN(num)) {
@@ -31,6 +33,7 @@ const transactionSchema = z.object({
 type Transaction = z.infer<typeof transactionSchema>;
 
 const newTransactionSchema = z.object({
+    vendor: z.string(),
     description: z.string(),
     category: z.string(),
     amount: z.number(),
@@ -46,6 +49,14 @@ const newTransactionSchema = z.object({
 });
 
 type NewTransaction = z.infer<typeof newTransactionSchema>;
+
+const categorySchema = z.object({
+    id: z.string(),
+    userid: z.string(),
+    name: z.string(),
+});
+
+type Category = z.infer<typeof categorySchema>;
 
 const budgetSchema = z.object({
     id: z.string(),
@@ -73,19 +84,6 @@ const budgetSchema = z.object({
 
 type Budget = z.infer<typeof budgetSchema>;
 
-const userSchema = z.object({
-    UserID: z.string(),
-    Username: z.string(),
-});
-
-type User = z.infer<typeof userSchema>;
-
-const authErrorSchema = z.object({
-    message: z.string(),
-});
-
-type AuthError = z.infer<typeof authErrorSchema>;
-
 export {
     type Transaction,
     transactionSchema,
@@ -93,4 +91,6 @@ export {
     budgetSchema,
     type NewTransaction,
     newTransactionSchema,
+    type Category,
+    categorySchema,
 };

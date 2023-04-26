@@ -55,6 +55,10 @@ export const NavBar: React.FC = () => {
                                         <NavLink to="/transactions">
                                             Transactions
                                         </NavLink>
+
+                                        <NavLink to="/categories">
+                                            Categories
+                                        </NavLink>
                                     </>
                                 )}
                             </div>

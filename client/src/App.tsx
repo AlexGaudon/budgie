@@ -5,8 +5,6 @@ import { Login } from "./pages/Login";
 
 import LandingPage from "./pages/Landing";
 
-import { Transactions } from "./components/Transactions";
-
 function App() {
     let auth = useAuth();
 
@@ -19,7 +17,6 @@ function App() {
             <div>
                 <h1>Hello {auth.user.username}</h1>
                 <br />
-                <Transactions></Transactions>
             </div>
         );
     }
