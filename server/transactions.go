@@ -11,8 +11,9 @@ import (
 )
 
 type CreateTransactionRequest struct {
+	Vendor      string    `json:"vendor"`
 	Description string    `json:"description"`
-	Category    string    `json:"category"`
+	Category    string    `json:"category_id"`
 	Amount      int       `json:"amount"`
 	Date        time.Time `json:"date"`
 	Type        string    `json:"type"`
@@ -45,6 +46,22 @@ func GetTransactions(w http.ResponseWriter, r *http.Request) error {
 	})
 }
 
+func GetTransactionsByCategory(w http.ResponseWriter, r *http.Request) error {
+	user := r.Context().Value(ContextKey("user")).(*storage.User)
+
+	categoryId := chi.URLParam(r, "id")
+
+	transactions, err := storage.DB.GetTransactionsByCategory(user.ID, categoryId)
+
+	if err != nil {
+		return err
+	}
+
+	return WriteJSON(w, http.StatusOK, JSON{
+		"data": transactions,
+	})
+}
+
 func CreateTransaction(w http.ResponseWriter, r *http.Request) error {
 	createTransactionReq := &CreateTransactionRequest{}
 
@@ -62,8 +79,9 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) error {
 
 	transaction := &storage.Transaction{
 		UserId:      user.ID,
+		Vendor:      createTransactionReq.Vendor,
 		Description: createTransactionReq.Description,
-		Category:    createTransactionReq.Category,
+		CategoryID:  createTransactionReq.Category,
 		Amount:      createTransactionReq.Amount,
 		Date:        createTransactionReq.Date,
 		Type:        createTransactionReq.Type,
@@ -71,16 +89,14 @@ func CreateTransaction(w http.ResponseWriter, r *http.Request) error {
 		UpdatedAt:   time.Now().UTC(),
 	}
 
-	id, err := storage.DB.CreateTransaction(transaction)
-
-	transaction.ID = id
+	tResult, err := storage.DB.CreateTransaction(transaction)
 
 	if err != nil {
 		return err
 	}
 
 	return WriteJSON(w, http.StatusOK, JSON{
-		"data": transaction,
+		"data": tResult,
 	})
 }
 
@@ -108,7 +124,8 @@ func UpdateTransaction(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	t.Amount = ctr.Amount
-	t.Category = ctr.Category
+	t.Vendor = ctr.Vendor
+	t.CategoryID = ctr.Category
 	t.Description = ctr.Description
 	t.Date = ctr.Date
 	t.UpdatedAt = time.Now().UTC()

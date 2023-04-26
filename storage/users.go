@@ -26,6 +26,21 @@ func (s *PostgresStore) createUserTable() error {
 	return nil
 }
 
+func (s *PostgresStore) InsertDefaultCategories(userId string) error {
+	query := `INSERT INTO category (name, userid)
+	VALUES ('Discrectionary', $1), ('Income \(Payroll\)', $1), (Income \(Investment\), $1), ('Groceries', $1)`
+
+	rows, err := s.db.Query(query, userId)
+
+	if err != nil {
+		return err
+	}
+
+	rows.Close()
+
+	return nil
+}
+
 func (s *PostgresStore) CreateUser(u *User) (string, error) {
 	query := `INSERT INTO users (username, passwordhash)
 	VALUES ($1, $2) returning id`

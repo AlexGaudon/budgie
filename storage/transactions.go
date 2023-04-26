@@ -10,8 +10,9 @@ func (s *PostgresStore) createTransactionTable() error {
 	query := `CREATE TABLE IF NOT EXISTS transactions (
 		id UUID PRIMARY KEY DEFAULT public.uuid_generate_v4(),
 		userid UUID NOT NULL,
+		vendor VARCHAR(255) NOT NULL,
 		description VARCHAR(255) NOT NULL,
-		category VARCHAR(255) NOT NULL,
+		category_id UUID NOT NULL REFERENCES category(id),
 		amount INTEGER NOT NULL,
 		date TIMESTAMP NOT NULL,
 		type VARCHAR(255) NOT NULL,
@@ -30,21 +31,89 @@ func (s *PostgresStore) createTransactionTable() error {
 	return nil
 }
 
-func (s *PostgresStore) CreateTransaction(t *Transaction) (string, error) {
-	query := `INSERT INTO transactions (userid, description, category, amount, date, type)
-	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+func (s *PostgresStore) CreateTransaction(t *Transaction) (*Transaction, error) {
+	query := `INSERT INTO transactions (userid, vendor, description, category_id, amount, date, type)
+	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	var id string
-	err := s.db.QueryRow(query, t.UserId, t.Description, t.Category, t.Amount, t.Date, t.Type).Scan(&id)
+	err := s.db.QueryRow(query, t.UserId, t.Vendor, t.Description, t.CategoryID, t.Amount, t.Date, t.Type).Scan(&id)
 	if err != nil {
-		return "", err
+		return &Transaction{}, err
 	}
 
-	return id, nil
+	return s.GetTransactionById(id)
+}
+
+func (s *PostgresStore) GetTransactionsByCategory(userId, category string) ([]*Transaction, error) {
+	query := `
+SELECT
+	t.id,
+	t.userid,
+	t.vendor,
+	t.description,
+	t.category_id,
+	c.name as category_name,
+	t.amount,
+	t.date,
+	t.type,
+	t.created_at,
+	t.updated_at,
+	t.deleted_at
+FROM
+	transactions t
+JOIN
+	category c ON t.category_id = c.id
+WHERE
+	t.deleted_at IS NULL
+	AND t.userid = $1
+	AND t.category_id = $2
+ORDER BY
+	t.created_at DESC;`
+
+	rows, err := s.db.Query(query, userId, category)
+
+	if err != nil {
+		return nil, err
+	}
+
+	transactions := []*Transaction{}
+
+	for rows.Next() {
+		transaction, err := scanIntoTransaction(rows)
+		if err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions, nil
 }
 
 func (s *PostgresStore) GetTransactions(userId string) ([]*Transaction, error) {
-	rows, err := s.db.Query("SELECT * FROM transactions WHERE deleted_at IS NULL AND userid = $1 ORDER BY created_at DESC", userId)
+	rows, err := s.db.Query(`
+SELECT 
+    t.id,
+    t.userid,
+	t.vendor,
+    t.description,
+	t.category_id,
+    c.name as category_name,
+    t.amount,
+    t.date,
+    t.type,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at
+FROM 
+    transactions t
+JOIN 
+    category c ON t.category_id = c.id
+WHERE 
+    t.deleted_at IS NULL
+    AND t.userid = $1
+ORDER BY 
+    t.created_at DESC;`,
+		userId)
 
 	if err != nil {
 		return nil, err
@@ -64,7 +133,28 @@ func (s *PostgresStore) GetTransactions(userId string) ([]*Transaction, error) {
 }
 
 func (s *PostgresStore) GetTransactionById(id string) (*Transaction, error) {
-	rows, err := s.db.Query("SELECT * FROM transactions WHERE id = $1 AND deleted_at IS NULL", id)
+	rows, err := s.db.Query(`
+SELECT 
+	t.id,
+    t.userid,
+	t.vendor,
+    t.description,
+	t.category_id,
+    c.name as category_name,
+    t.amount,
+    t.date,
+    t.type,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at
+FROM 
+    transactions t
+JOIN 
+    category c ON t.category_id = c.id
+WHERE 
+    t.id = $1
+    AND t.deleted_at IS NULL;
+`, id)
 
 	if err != nil {
 		return nil, err
@@ -80,9 +170,9 @@ func (s *PostgresStore) GetTransactionById(id string) (*Transaction, error) {
 }
 
 func (s *PostgresStore) UpdateTransaction(t *Transaction) error {
-	query := `UPDATE transactions SET description=$1, category=$2, amount=$3, date=$4, type=$5, updated_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $6`
+	query := `UPDATE transactions SET vendor = $1, description=$2, category_id=$3, amount=$4, date=$5, type=$6, updated_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $7`
 
-	rows, err := s.db.Query(query, t.Description, t.Category, t.Amount, t.Date, t.Type, t.ID)
+	rows, err := s.db.Query(query, t.Vendor, t.Description, t.CategoryID, t.Amount, t.Date, t.Type, t.ID)
 
 	if err != nil {
 		return err
@@ -116,8 +206,10 @@ func scanIntoTransaction(rows *sql.Rows) (*Transaction, error) {
 	err := rows.Scan(
 		&transaction.ID,
 		&transaction.UserId,
+		&transaction.Vendor,
 		&transaction.Description,
-		&transaction.Category,
+		&transaction.CategoryID,
+		&transaction.CategoryName,
 		&transaction.Amount,
 		&transaction.Date,
 		&transaction.Type,

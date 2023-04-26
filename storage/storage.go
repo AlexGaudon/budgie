@@ -2,8 +2,10 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
+	"github.com/alexgaudon/budgie/config"
 	_ "github.com/lib/pq"
 )
 
@@ -27,7 +29,9 @@ func (s *PostgresStore) enableUUID() error {
 }
 
 func SetupDatabase() error {
-	connStr := "user=postgres dbname=postgres password=budgie sslmode=disable"
+	config := config.GetConfig()
+	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
+		config.DBHost, config.DBPort, config.DBName, config.DBUserName, config.DBUserPassword)
 	db, err := sql.Open("postgres", connStr)
 
 	if err != nil {
@@ -49,6 +53,11 @@ func SetupDatabase() error {
 
 func (s *PostgresStore) Init() error {
 	err := s.enableUUID()
+	if err != nil {
+		return err
+	}
+
+	err = s.createCategoryTable()
 	if err != nil {
 		return err
 	}

@@ -166,7 +166,7 @@ func Register(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if registerRequest.Password != registerRequest.PasswordConfirm {
-		return fmt.Errorf("password and password confirmation do not match.")
+		return fmt.Errorf("password and password confirmation do not match")
 	}
 
 	user, err := storage.NewUser(registerRequest.Username, registerRequest.Password)
@@ -179,6 +179,8 @@ func Register(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return fmt.Errorf("error registering user")
 	}
+
+	_ = storage.DB.InsertDefaultCategories(id)
 
 	return WriteJSON(w, http.StatusOK, JSON{
 		"data": "registered user",

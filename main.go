@@ -3,12 +3,15 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/alexgaudon/budgie/config"
 	"github.com/alexgaudon/budgie/server"
 	"github.com/alexgaudon/budgie/storage"
 )
 
 func main() {
+	config.LoadConfig()
 	r := server.SetupServer()
 
 	err := storage.SetupDatabase()
@@ -21,9 +24,14 @@ func main() {
 		log.Fatal("Error initializing database: ", err)
 	}
 
-	log.Println("Starting server on :3000")
+	port := os.Getenv("SERVER_PORT")
+	log.Println("Starting server on :" + port)
 
-	err = http.ListenAndServe(":3000", r)
+	if port == "" {
+		port = "3000"
+	}
+
+	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
 		log.Fatal("Error: ", err)
 	}

@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,6 +21,7 @@ type apiFunc func(http.ResponseWriter, *http.Request) error
 func makeHandlerFunc(fn apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := fn(w, r); err != nil {
+			log.Println("ERROR: ", err.Error())
 			WriteJSON(w, http.StatusBadRequest, JSON{"error": err.Error()})
 		}
 	}
@@ -59,6 +61,7 @@ func SetupServer() *chi.Mux {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Compress(5))
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
@@ -76,6 +79,8 @@ func SetupServer() *chi.Mux {
 	r.Route("/api/transactions", func(r chi.Router) {
 		r.Get("/", WithUser(makeHandlerFunc(GetTransactions)))
 
+		r.Get("/category/{id}", WithUser(makeHandlerFunc(GetTransactionsByCategory)))
+
 		r.Get("/{id}", WithUser(makeHandlerFunc(GetTransactionById)))
 
 		r.Post("/", WithUser(makeHandlerFunc(CreateTransaction)))
@@ -83,6 +88,14 @@ func SetupServer() *chi.Mux {
 		r.Delete("/{id}", WithUser(makeHandlerFunc(DeleteTransaction)))
 
 		r.Put("/{id}", WithUser(makeHandlerFunc(UpdateTransaction)))
+	})
+
+	r.Route("/api/categories", func(r chi.Router) {
+		r.Get("/", WithUser(makeHandlerFunc(GetCategories)))
+
+		r.Post("/", WithUser(makeHandlerFunc(CreateCategory)))
+
+		r.Delete("/{id}", WithUser(makeHandlerFunc(DeleteCategory)))
 	})
 
 	r.Route("/api/budgets", func(r chi.Router) {
