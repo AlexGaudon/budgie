@@ -4,78 +4,123 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/alexgaudon/budgie/config"
-	_ "github.com/lib/pq"
 )
 
-var DB *PostgresStore
-
-type PostgresStore struct {
-	db *sql.DB
+type DBStore struct {
+	migrationPath string
+	db            *sql.DB
 }
 
-func (s *PostgresStore) enableUUID() error {
-	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
+func (d *DBStore) hasExecutedMigration(id string) bool {
+	query := `SELECT executed FROM migrations WHERE id = $1`
 
-	_, err := s.db.Exec(query)
+	var executed bool
+	err := d.db.QueryRow(query, id).Scan(&executed)
 
 	if err != nil {
-		log.Println("ERROR ON QUERY: ", query)
+		return false
+	}
+
+	return executed
+}
+
+func (d *DBStore) runMigration(migration string) error {
+	_, err := d.db.Exec(migration)
+
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func SetupDatabase() error {
-	config := config.GetConfig()
-	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
-		config.DBHost, config.DBPort, config.DBName, config.DBUserName, config.DBUserPassword)
-	db, err := sql.Open("postgres", connStr)
+func (d *DBStore) markMigration(id string) error {
+	query := `INSERT INTO migrations (id, executed)
+	VALUES($1, true)`
+
+	_, err := d.db.Exec(query, id)
 
 	if err != nil {
 		return err
 	}
 
-	if err := db.Ping(); err != nil {
+	return nil
+}
+
+func (d *DBStore) HandleMigrations() error {
+	migrationTableQuery := `CREATE TABLE IF NOT EXISTS migrations (
+		id SERIAL PRIMARY KEY,
+		executed BOOLEAN NOT NULL DEFAULT FALSE
+	);`
+
+	_, err := d.db.Exec(migrationTableQuery)
+
+	if err != nil {
+		log.Println("Error creating Migrations Table, ", err.Error())
 		return err
+	}
+
+	files, err := os.ReadDir(d.migrationPath)
+
+	for _, e := range files {
+		if !e.IsDir() {
+			migration := e.Name()
+			id := strings.Split(migration, ".")[0]
+
+			if !d.hasExecutedMigration(id) {
+				path := d.migrationPath + "/" + e.Name()
+				content, err := os.ReadFile(path)
+
+				if err != nil {
+					log.Printf("ERROR: Failed reading migration (%s): %s", id, err.Error())
+				}
+
+				err = d.runMigration(string(content))
+
+				if err != nil {
+					log.Printf("ERROR: Failed running migration (%s): %s", id, err.Error())
+				}
+
+				err = d.markMigration(id)
+
+				if err != nil {
+					log.Printf("ERROR: Failed marking migration (%s): %s", id, err.Error())
+				}
+
+				log.Println("Ran and marked migration: ", id)
+			}
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ConnectDatabase(migrationPath string) (*DBStore, error) {
+	config := config.GetConfig()
+	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
+		config.DBHost, config.DBPort, config.DBName, config.DBUserName, config.DBUserPassword)
+
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
 	}
 
 	log.Println("Connected to database")
 
-	DB = &PostgresStore{
-		db: db,
-	}
-
-	return nil
-}
-
-func (s *PostgresStore) Init() error {
-	err := s.enableUUID()
-	if err != nil {
-		return err
-	}
-
-	err = s.createCategoryTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createTransactionTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createUserTable()
-	if err != nil {
-		return err
-	}
-
-	err = s.createBudgetTable()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return &DBStore{
+		migrationPath: migrationPath,
+		db:            db,
+	}, nil
 }

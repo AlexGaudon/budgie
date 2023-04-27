@@ -19,6 +19,7 @@
 
 !Makefile
 !Dockerfile
+!/migrations/*
 
 # ...even if they are in subdirectories
 !*/
