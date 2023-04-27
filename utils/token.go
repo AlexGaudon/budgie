@@ -5,11 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexgaudon/budgie/config"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func CreateToken(userId string, ttl time.Duration) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
+	secret := config.GetConfig().JWTSecret
 
 	now := time.Now().UTC()
 

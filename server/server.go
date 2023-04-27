@@ -27,21 +27,9 @@ func makeHandlerFunc(fn apiFunc) http.HandlerFunc {
 	}
 }
 
-func WriteInternalServerError(w http.ResponseWriter) {
-	WriteJSON(w, http.StatusInternalServerError, JSON{
-		"message": "there was an error processing your request",
-	})
-}
-
 func WriteUnauthorized(w http.ResponseWriter) {
 	WriteJSON(w, http.StatusUnauthorized, JSON{
 		"error": "Unauthorized",
-	})
-}
-
-func ErrorForbidden(w http.ResponseWriter) {
-	WriteJSON(w, http.StatusForbidden, JSON{
-		"error": "forbidden",
 	})
 }
 

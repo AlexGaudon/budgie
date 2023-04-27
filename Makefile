@@ -2,7 +2,9 @@ build:
 	cd client && npm run build && cd ..
 
 
-run:	build
+run:	build budgie
+
+budgie:
 	go build && ./budgie
 
 image:

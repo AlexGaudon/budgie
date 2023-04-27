@@ -20,6 +20,12 @@ type RegisterRequest struct {
 	PasswordConfirm string `json:"password_confirm"`
 }
 
+func writeInternalServerError(w http.ResponseWriter) {
+	WriteJSON(w, http.StatusInternalServerError, JSON{
+		"message": "there was an error processing your request",
+	})
+}
+
 func RefreshAccessToken(w http.ResponseWriter, r *http.Request) error {
 	refresh_token, err := r.Cookie("refresh_token")
 
@@ -121,14 +127,18 @@ func Login(w http.ResponseWriter, r *http.Request) error {
 
 	err = setAccessToken(w, user.ID)
 	if err != nil {
-		WriteInternalServerError(w)
+		WriteJSON(w, http.StatusInternalServerError, JSON{
+			"error": "there was an error processing your request",
+		})
 		return err
 	}
 
 	refreshToken, err := utils.CreateToken(user.ID, config.RefreshTokenExpiresIn)
 
 	if err != nil {
-		WriteInternalServerError(w)
+		WriteJSON(w, http.StatusInternalServerError, JSON{
+			"error": "there was an error processing your request",
+		})
 		return err
 	}
 

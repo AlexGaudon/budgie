@@ -15,6 +15,7 @@ type Config struct {
 	DBName         string
 	DBPort         string
 	ServerPort     string
+	JWTSecret      string
 
 	AccessTokenExpiresIn  time.Duration
 	RefreshTokenExpiresIn time.Duration
@@ -46,6 +47,7 @@ func LoadConfig() {
 	c.DBUserPassword = os.Getenv("DB_PASS")
 	c.DBName = os.Getenv("DB_NAME")
 	c.DBPort = os.Getenv("DB_PORT")
+	c.JWTSecret = os.Getenv("JWT_SECRET")
 
 	c.AccessTokenExpiresIn = time.Minute * 15
 	c.RefreshTokenExpiresIn = time.Hour * 1

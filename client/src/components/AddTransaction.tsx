@@ -4,14 +4,7 @@ import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCategoriesQuery } from "../hooks/useCategories";
-import {
-    useCreateTransactionMutation,
-    useTransactionQuery,
-} from "../hooks/useTransactions";
-
-type NewTransactionProps = {
-    onFinish: () => void;
-};
+import { useCreateTransactionMutation } from "../hooks/useTransactions";
 
 const createTransactionSchema = z.object({
     vendor: z.string(),
@@ -31,7 +24,7 @@ const createTransactionSchema = z.object({
 
 export type CreateTransactionForm = z.infer<typeof createTransactionSchema>;
 
-export const AddTransaction = ({ onFinish }: NewTransactionProps) => {
+export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
     const {
         register,
         handleSubmit,
@@ -46,12 +39,6 @@ export const AddTransaction = ({ onFinish }: NewTransactionProps) => {
     });
 
     const {
-        data: transactions,
-        isLoading: transactionLoading,
-        error: transactionError,
-    } = useTransactionQuery();
-
-    const {
         data: categories,
         isLoading: categoryLoading,
         error: categoryError,
@@ -59,7 +46,7 @@ export const AddTransaction = ({ onFinish }: NewTransactionProps) => {
 
     const createTransactionMutation = useCreateTransactionMutation();
 
-    if (transactionLoading || categoryLoading) {
+    if (categoryLoading) {
         return <h1>Loading...</h1>;
     }
 
