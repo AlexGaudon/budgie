@@ -3,37 +3,42 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/alexgaudon/budgie/models"
+	"github.com/alexgaudon/budgie/storage"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
-type JSON = map[string]any
+type APIServer struct {
+	Router *chi.Mux
+	User   models.UserRepo
+}
 
-type apiFunc func(http.ResponseWriter, *http.Request) error
-
-func makeHandlerFunc(fn apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := fn(w, r); err != nil {
-			log.Println("ERROR: ", err.Error())
-			WriteJSON(w, http.StatusBadRequest, JSON{"error": err.Error()})
-		}
+func NewAPIServer(db *storage.DBStore) *APIServer {
+	return &APIServer{
+		Router: chi.NewRouter(),
+		User:   *db.User,
 	}
 }
 
-func WriteUnauthorized(w http.ResponseWriter) {
-	WriteJSON(w, http.StatusUnauthorized, JSON{
-		"error": "Unauthorized",
-	})
+type Response struct {
+	Status  int
+	Content JSON
 }
 
-func WriteJSON(w http.ResponseWriter, status int, c JSON) error {
+type JSON = map[string]any
+
+type apiFunc = func(http.ResponseWriter, *http.Request) (*Response, error)
+
+func writeResponse(w http.ResponseWriter, status int, c JSON) error {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if status == http.StatusNoContent {
@@ -42,18 +47,32 @@ func WriteJSON(w http.ResponseWriter, status int, c JSON) error {
 	return json.NewEncoder(w).Encode(c)
 }
 
-func SetupServer() *chi.Mux {
-	r := chi.NewRouter()
+func MakeHandler(fn apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		resp, err := fn(w, r)
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Compress(5))
+		if err != nil {
+			log.Println("ERROR: ", err.Error())
+			writeResponse(w, http.StatusBadRequest, JSON{
+				"error": err.Error(),
+			})
+			return
+		}
 
-	r.Use(middleware.Timeout(60 * time.Second))
+		writeResponse(w, resp.Status, resp.Content)
+	}
+}
 
-	r.Use(cors.Handler(cors.Options{
+func (a *APIServer) ConfigureServer() {
+	a.Router.Use(middleware.Logger)
+	a.Router.Use(middleware.RealIP)
+	a.Router.Use(middleware.RequestID)
+	a.Router.Use(middleware.Recoverer)
+	a.Router.Use(middleware.Compress(5))
+
+	a.Router.Use(middleware.Timeout(60 * time.Second))
+
+	a.Router.Use(cors.Handler(cors.Options{
 		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
 		AllowedOrigins: []string{"https://*", "http://*"},
 		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
@@ -64,48 +83,20 @@ func SetupServer() *chi.Mux {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	r.Route("/api/transactions", func(r chi.Router) {
-		r.Get("/", WithUser(makeHandlerFunc(GetTransactions)))
-
-		r.Get("/category/{id}", WithUser(makeHandlerFunc(GetTransactionsByCategory)))
-
-		r.Get("/{id}", WithUser(makeHandlerFunc(GetTransactionById)))
-
-		r.Post("/", WithUser(makeHandlerFunc(CreateTransaction)))
-
-		r.Delete("/{id}", WithUser(makeHandlerFunc(DeleteTransaction)))
-
-		r.Put("/{id}", WithUser(makeHandlerFunc(UpdateTransaction)))
-	})
-
-	r.Route("/api/categories", func(r chi.Router) {
-		r.Get("/", WithUser(makeHandlerFunc(GetCategories)))
-
-		r.Post("/", WithUser(makeHandlerFunc(CreateCategory)))
-
-		r.Delete("/{id}", WithUser(makeHandlerFunc(DeleteCategory)))
-	})
-
-	r.Route("/api/budgets", func(r chi.Router) {
-		r.Get("/", WithUser(makeHandlerFunc(GetBudgets)))
-	})
-
-	r.Route("/api/user", func(r chi.Router) {
-		r.Post("/register", makeHandlerFunc(Register))
-		r.Post("/login", makeHandlerFunc(Login))
-		r.Get("/me", makeHandlerFunc(RefreshAccessToken))
-		r.Get("/logout", makeHandlerFunc(Logout))
-	})
+	a.registerAuth()
 
 	workDir, _ := os.Getwd()
-	filesDir := filepath.Join(workDir, "client/dist")
+	filesDir := filepath.Join(workDir, "/client/dist")
 
-	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+	a.Router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := os.Stat(filesDir + r.URL.Path); errors.Is(err, os.ErrNotExist) {
 			http.ServeFile(w, r, filepath.Join(filesDir, "index.html"))
 		}
 		http.ServeFile(w, r, filesDir+r.URL.Path)
 	})
 
-	return r
+	chi.Walk(a.Router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+		fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
+		return nil
+	})
 }

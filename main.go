@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/alexgaudon/budgie/config"
 	"github.com/alexgaudon/budgie/server"
@@ -12,27 +12,33 @@ import (
 
 func main() {
 	config.LoadConfig()
-	r := server.SetupServer()
 
-	err := storage.SetupDatabase()
+	db, err := storage.ConnectDatabase("./migrations")
 
 	if err != nil {
-		log.Fatal("Error setting up database: ", err)
+		panic(err)
 	}
 
-	if err := storage.DB.Init(); err != nil {
-		log.Fatal("Error initializing database: ", err)
-	}
+	err = db.Initialize()
 
-	port := os.Getenv("SERVER_PORT")
-	log.Println("Starting server on :" + port)
-
-	if port == "" {
-		port = "3000"
-	}
-
-	err = http.ListenAndServe(":"+port, r)
 	if err != nil {
-		log.Fatal("Error: ", err)
+		panic(err)
+	}
+
+	if err != nil {
+		fmt.Println("Err", err.Error())
+	}
+
+	server := server.NewAPIServer(db)
+	server.ConfigureServer()
+
+	port := config.GetConfig().ServerPort
+
+	log.Println("Starting web server on port " + port)
+
+	err = http.ListenAndServe(":"+port, server.Router)
+
+	if err != nil {
+		panic(err)
 	}
 }

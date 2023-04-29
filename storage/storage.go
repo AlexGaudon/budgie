@@ -7,12 +7,26 @@ import (
 	"os"
 	"strings"
 
+	_ "github.com/lib/pq"
+
 	"github.com/alexgaudon/budgie/config"
+	"github.com/alexgaudon/budgie/models"
 )
 
 type DBStore struct {
 	migrationPath string
 	db            *sql.DB
+	User          *models.UserRepo
+}
+
+func (d *DBStore) Initialize() error {
+	d.User = &models.UserRepo{
+		DB: d.db,
+	}
+
+	err := d.handleMigrations()
+
+	return err
 }
 
 func (d *DBStore) hasExecutedMigration(id string) bool {
@@ -51,7 +65,7 @@ func (d *DBStore) markMigration(id string) error {
 	return nil
 }
 
-func (d *DBStore) HandleMigrations() error {
+func (d *DBStore) handleMigrations() error {
 	migrationTableQuery := `CREATE TABLE IF NOT EXISTS migrations (
 		id SERIAL PRIMARY KEY,
 		executed BOOLEAN NOT NULL DEFAULT FALSE

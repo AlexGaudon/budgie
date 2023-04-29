@@ -55,5 +55,9 @@ func LoadConfig() {
 	c.AccessTokenMaxAge = int(time.Minute * 15)
 	c.RefreshTokenMaxAge = int(time.Hour * 1)
 
+	if c.ServerPort == "" {
+		c.ServerPort = "3000"
+	}
+
 	cfg = *c
 }
