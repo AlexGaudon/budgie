@@ -20,3 +20,12 @@ type User struct {
 	Username     string       `json:"username"`
 	PasswordHash string       `json:"-"`
 }
+
+type Category struct {
+	ID        string       `json:"id"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
+	DeletedAt sql.NullTime `json:"deleted_at"`
+	UserID    string       `json:"user"`
+	Name      string       `json:"name"`
+}

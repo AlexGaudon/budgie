@@ -17,10 +17,15 @@ type DBStore struct {
 	migrationPath string
 	db            *sql.DB
 	User          *models.UserRepo
+	Categories    *models.CategoriesRepo
 }
 
 func (d *DBStore) Initialize() error {
 	d.User = &models.UserRepo{
+		DB: d.db,
+	}
+
+	d.Categories = &models.CategoriesRepo{
 		DB: d.db,
 	}
 

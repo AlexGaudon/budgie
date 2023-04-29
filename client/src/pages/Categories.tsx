@@ -1,5 +1,8 @@
 import { useForm } from "react-hook-form";
-import { useCategoriesQuery } from "../hooks/useCategories";
+import {
+    useCategoriesQuery,
+    useDeleteCategoryMutation,
+} from "../hooks/useCategories";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -11,6 +14,7 @@ type CategoryProps = {
 };
 
 export const Category = ({ id, name }: CategoryProps) => {
+    const deleteCategory = useDeleteCategoryMutation();
     return (
         <div
             key={id}
@@ -21,7 +25,9 @@ export const Category = ({ id, name }: CategoryProps) => {
                 <p>{name}</p>
             </div>
             <button
-                onClick={() => {}}
+                onClick={() => {
+                    deleteCategory.mutateAsync(id);
+                }}
                 className="px-4 py-2 bg-red-500 text-white rounded-md"
             >
                 Delete

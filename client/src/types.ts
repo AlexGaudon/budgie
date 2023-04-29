@@ -52,7 +52,7 @@ type NewTransaction = z.infer<typeof newTransactionSchema>;
 
 const categorySchema = z.object({
     id: z.string(),
-    userid: z.string(),
+    user: z.string(),
     name: z.string(),
 });
 

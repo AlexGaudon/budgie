@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/alexgaudon/budgie/models"
 	"github.com/alexgaudon/budgie/storage"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -19,13 +18,17 @@ import (
 
 type APIServer struct {
 	Router *chi.Mux
-	User   models.UserRepo
+	DB     *storage.DBStore
+	// User       models.UserRepo
+	// Categories models.CategoriesRepo
 }
 
 func NewAPIServer(db *storage.DBStore) *APIServer {
 	return &APIServer{
 		Router: chi.NewRouter(),
-		User:   *db.User,
+		DB:     db,
+		// User:   *db.User,
+		// Categories: *db.,
 	}
 }
 
@@ -34,9 +37,14 @@ type Response struct {
 	Content JSON
 }
 
+type RError struct {
+	Status int
+	Err    error
+}
+
 type JSON = map[string]any
 
-type apiFunc = func(http.ResponseWriter, *http.Request) (*Response, error)
+type apiFunc = func(http.ResponseWriter, *http.Request) (*Response, *RError)
 
 func writeResponse(w http.ResponseWriter, status int, c JSON) error {
 	w.Header().Add("Content-Type", "application/json")
@@ -52,9 +60,9 @@ func MakeHandler(fn apiFunc) http.HandlerFunc {
 		resp, err := fn(w, r)
 
 		if err != nil {
-			log.Println("ERROR: ", err.Error())
-			writeResponse(w, http.StatusBadRequest, JSON{
-				"error": err.Error(),
+			log.Println("ERROR: ", err.Err.Error())
+			writeResponse(w, err.Status, JSON{
+				"error": err.Err.Error(),
 			})
 			return
 		}
@@ -84,6 +92,7 @@ func (a *APIServer) ConfigureServer() {
 	}))
 
 	a.registerAuth()
+	a.registerCategories()
 
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "/client/dist")
@@ -96,7 +105,7 @@ func (a *APIServer) ConfigureServer() {
 	})
 
 	chi.Walk(a.Router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		fmt.Printf("[%s]: '%s' has %d middlewares\n", method, route, len(middlewares))
+		fmt.Printf("[%s]: '%s'\n", method, route)
 		return nil
 	})
 }

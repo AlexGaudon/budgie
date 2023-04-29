@@ -69,10 +69,10 @@ func (r *UserRepo) FindOne(user *User) (*User, error) {
 	)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, fmt.Errorf("user not found")
 	}
 
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return nil, err
 	}
 
@@ -83,17 +83,15 @@ func (r *UserRepo) create(u *User) (*User, error) {
 	query := `
 	INSERT INTO users (username, passwordhash) VALUES($1, $2) RETURNING id, created_at, updated_at, deleted_at`
 
-	us := BaseModel{}
-
 	row := r.DB.QueryRow(query, u.Username, u.PasswordHash)
 
-	err := row.Scan(&us.ID, &us.CreatedAt, &us.UpdatedAt, &us.DeletedAt)
+	err := row.Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt, &u.DeletedAt)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if us.ID == "" {
+	if u.ID == "" {
 		return nil, fmt.Errorf("a user with this name already exists")
 	}
 
@@ -103,15 +101,11 @@ func (r *UserRepo) create(u *User) (*User, error) {
 func (r *UserRepo) update(u *User) (*User, error) {
 	query := `UPDATE users SET username = $1, passwordhash = $2, updated_at = $3 WHERE id = $4 RETURNING updated_at`
 
-	us := BaseModel{}
-
-	err := r.DB.QueryRow(query, u.Username, u.PasswordHash, time.Now().UTC(), u.ID).Scan(&us.UpdatedAt)
+	err := r.DB.QueryRow(query, u.Username, u.PasswordHash, time.Now().UTC(), u.ID).Scan(&u.UpdatedAt)
 
 	if err != nil {
 		return nil, err
 	}
-
-	u.UpdatedAt = us.UpdatedAt
 
 	return u, nil
 }

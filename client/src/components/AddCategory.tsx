@@ -8,7 +8,6 @@ import {
 
 const categoryCreateSchema = z.object({
     name: z.string(),
-    parent_id: z.string().nullish(),
 });
 
 export type CreateCategoryForm = z.infer<typeof categoryCreateSchema>;
@@ -35,7 +34,6 @@ export const AddCategory = ({ onFinish }: { onFinish: () => void }) => {
         console.log(data);
         let input = {
             name: data.name,
-            parent_id: null,
         };
         await createCategoryMutation.mutateAsync(input);
 
@@ -60,23 +58,6 @@ export const AddCategory = ({ onFinish }: { onFinish: () => void }) => {
                         className="border border-gray-300 rounder-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
 
-                    <label htmlFor="parent_id">Parent Category</label>
-                    <select
-                        id="parent_id"
-                        className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        {...register("parent_id", {
-                            required: false,
-                            maxLength: 80,
-                        })}
-                    >
-                        {categories?.map((c) => {
-                            return (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            );
-                        })}
-                    </select>
                     <input
                         type="submit"
                         className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor:pointer"
