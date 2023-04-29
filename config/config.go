@@ -50,10 +50,10 @@ func LoadConfig() {
 	c.JWTSecret = os.Getenv("JWT_SECRET")
 
 	c.AccessTokenExpiresIn = time.Minute * 15
-	c.RefreshTokenExpiresIn = time.Hour * 1
+	c.RefreshTokenExpiresIn = time.Hour * 24
 
 	c.AccessTokenMaxAge = int(time.Minute * 15)
-	c.RefreshTokenMaxAge = int(time.Hour * 1)
+	c.RefreshTokenMaxAge = int(time.Hour * 24)
 
 	if c.ServerPort == "" {
 		c.ServerPort = "3000"
