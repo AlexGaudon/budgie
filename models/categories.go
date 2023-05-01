@@ -9,37 +9,6 @@ type CategoriesRepo struct {
 	DB *sql.DB
 }
 
-func (r *CategoriesRepo) Save(c *Category) (*Category, error) {
-	if r.Exists(c) {
-		return r.update(c)
-	}
-	return r.create(c)
-}
-
-func (r *CategoriesRepo) Exists(c *Category) bool {
-	f, err := r.FindOne(c)
-
-	if err != nil {
-		return false
-	}
-
-	return f != nil && f.ID != ""
-}
-
-func (r *CategoriesRepo) Delete(id string) error {
-	query := `UPDATE categories SET deleted_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $1`
-
-	rows, err := r.DB.Query(query, id)
-
-	rows.Close()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *CategoriesRepo) Find(userId string) ([]*Category, error) {
 	query := `SELECT id, userid, name, created_at, updated_at, deleted_at FROM categories WHERE userid = $1 AND deleted_at IS NULL`
 
@@ -93,6 +62,34 @@ func (r *CategoriesRepo) FindOne(c *Category) (*Category, error) {
 	return c, nil
 }
 
+func (r *CategoriesRepo) Exists(c *Category) bool {
+	f, err := r.FindOne(c)
+
+	if err != nil {
+		return false
+	}
+
+	return f != nil && f.ID != ""
+}
+
+func (r *CategoriesRepo) Save(c *Category) (*Category, error) {
+	return r.create(c)
+}
+
+func (r *CategoriesRepo) Delete(id string) error {
+	query := `UPDATE categories SET deleted_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $1`
+
+	rows, err := r.DB.Query(query, id)
+
+	rows.Close()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *CategoriesRepo) create(c *Category) (*Category, error) {
 	query := `INSERT INTO categories (userid, name)
 	VALUES ($1, $2) RETURNING id, created_at, updated_at, deleted_at`
@@ -106,14 +103,10 @@ func (r *CategoriesRepo) create(c *Category) (*Category, error) {
 	}
 
 	if c.ID == "" {
-		return nil, fmt.Errorf("error creating transaction")
+		return nil, fmt.Errorf("error creating category")
 	}
 
 	return c, nil
-}
-
-func (r *CategoriesRepo) update(c *Category) (*Category, error) {
-	return nil, nil
 }
 
 func scanIntoCategory(rows *sql.Rows) (*Category, error) {

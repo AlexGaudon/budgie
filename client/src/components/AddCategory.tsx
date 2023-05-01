@@ -22,12 +22,6 @@ export const AddCategory = ({ onFinish }: { onFinish: () => void }) => {
         resolver: zodResolver(categoryCreateSchema),
     });
 
-    const {
-        data: categories,
-        isLoading: isLoading,
-        error: error,
-    } = useCategoriesQuery();
-
     const createCategoryMutation = useCreateCategoryMutation();
 
     const onSubmit: SubmitHandler<CreateCategoryForm> = async (data) => {
@@ -38,14 +32,15 @@ export const AddCategory = ({ onFinish }: { onFinish: () => void }) => {
         await createCategoryMutation.mutateAsync(input);
 
         onFinish();
+        reset();
     };
 
     return (
         <div className="flex items-center justify-center h-full w-8/12">
-            {errors && <h1>{JSON.stringify(errors)}</h1>}
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-2 gap-4">
                     <label htmlFor="name">Name</label>
+                    {errors.name && "Error: " + errors.name}
                     <input
                         id="name"
                         autoComplete="off"

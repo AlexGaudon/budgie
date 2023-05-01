@@ -60,8 +60,10 @@ type Category = z.infer<typeof categorySchema>;
 
 const budgetSchema = z.object({
     id: z.string(),
-    userid: z.string(),
-    category: z.string(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    user: z.string(),
+    name: z.string(),
     amount: z.number().transform((num) => {
         // Check if the input number is valid
         if (isNaN(num)) {
@@ -76,10 +78,9 @@ const budgetSchema = z.object({
             currency: "USD",
         });
     }),
-    recurring: z.boolean(),
-    updated_at: z.string(),
-    created_at: z.string(),
-    deleted_at: z.string().nullable(),
+    period: z.string().transform((input) => {
+        return new Date(input).toISOString().substring(0, 7);
+    }),
 });
 
 type Budget = z.infer<typeof budgetSchema>;

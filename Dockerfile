@@ -12,6 +12,7 @@ COPY server/* ./server/
 COPY storage/* ./storage/
 COPY utils/* ./utils/
 COPY config/* ./config/
+COPY models/* ./models/
 COPY client/dist/* ./client/dist
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /budgie

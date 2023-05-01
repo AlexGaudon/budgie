@@ -40,16 +40,16 @@ func (s *APIServer) registerAuth() {
 	})
 }
 
-func refreshInvalid() (*Response, *RError) {
+func refreshInvalid() *Response {
 	return &Response{
 		Status: http.StatusUnauthorized,
 		Content: JSON{
 			"message": "refresh_token is invalid",
 		},
-	}, nil
+	}
 }
 
-func (s *APIServer) logout(w http.ResponseWriter, r *http.Request) (*Response, *RError) {
+func (s *APIServer) logout(w http.ResponseWriter, r *http.Request) *Response {
 	expired := time.Now().Add(-time.Hour * 1)
 
 	refreshCookie := http.Cookie{
@@ -73,10 +73,10 @@ func (s *APIServer) logout(w http.ResponseWriter, r *http.Request) (*Response, *
 		Content: JSON{
 			"message": "logged out successfully",
 		},
-	}, nil
+	}
 }
 
-func (s *APIServer) refresh(w http.ResponseWriter, r *http.Request) (*Response, *RError) {
+func (s *APIServer) refresh(w http.ResponseWriter, r *http.Request) *Response {
 	refresh_token, err := r.Cookie("refresh_token")
 
 	if err != nil {
@@ -94,16 +94,25 @@ func (s *APIServer) refresh(w http.ResponseWriter, r *http.Request) (*Response, 
 		return refreshInvalid()
 	}
 
-	setToken(w, sub, "access_token", config.GetConfig().AccessTokenExpiresIn)
+	err = setToken(w, sub, "access_token", config.GetConfig().AccessTokenExpiresIn)
+
+	if err != nil {
+		return &Response{
+			Status:  http.StatusInternalServerError,
+			Content: JSON{},
+		}
+	}
 
 	user, err := s.DB.User.FindOne(&models.User{
 		ID: sub,
 	})
 
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusUnauthorized,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
@@ -113,18 +122,20 @@ func (s *APIServer) refresh(w http.ResponseWriter, r *http.Request) (*Response, 
 			"userId":   user.ID,
 			"username": user.Username,
 		},
-	}, nil
+	}
 }
 
-func (s *APIServer) login(w http.ResponseWriter, r *http.Request) (*Response, *RError) {
+func (s *APIServer) login(w http.ResponseWriter, r *http.Request) *Response {
 	loginRequest := LoginRequest{}
 
 	err := utils.DecodeBody(r, &loginRequest)
 
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
@@ -133,9 +144,11 @@ func (s *APIServer) login(w http.ResponseWriter, r *http.Request) (*Response, *R
 	})
 
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
@@ -145,22 +158,26 @@ func (s *APIServer) login(w http.ResponseWriter, r *http.Request) (*Response, *R
 			Content: JSON{
 				"message": "Username or password is incorrect.",
 			},
-		}, nil
+		}
 	}
 
 	err = setToken(w, user.ID, "access_token", config.GetConfig().AccessTokenExpiresIn)
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
 	err = setToken(w, user.ID, "refresh_token", config.GetConfig().RefreshTokenExpiresIn)
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
@@ -171,18 +188,20 @@ func (s *APIServer) login(w http.ResponseWriter, r *http.Request) (*Response, *R
 			"userId":   user.ID,
 			"username": user.Username,
 		},
-	}, nil
+	}
 }
 
-func (s *APIServer) register(w http.ResponseWriter, r *http.Request) (*Response, *RError) {
+func (s *APIServer) register(w http.ResponseWriter, r *http.Request) *Response {
 	regReq := &RegisterRequest{}
 
 	err := utils.DecodeBody(r, &regReq)
 
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
@@ -192,33 +211,39 @@ func (s *APIServer) register(w http.ResponseWriter, r *http.Request) (*Response,
 			Content: JSON{
 				"message": "password and confirmation password must match",
 			},
-		}, nil
+		}
 	}
 
 	user, err := models.NewUser(regReq.Username, regReq.Password)
 
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
 	exists := s.DB.User.Exists(user)
 
 	if exists {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
 	_, err = s.DB.User.Save(user)
 
 	if err != nil {
-		return nil, &RError{
+		return &Response{
 			Status: http.StatusBadRequest,
-			Err:    err,
+			Content: JSON{
+				"error": err.Error(),
+			},
 		}
 	}
 
@@ -227,7 +252,7 @@ func (s *APIServer) register(w http.ResponseWriter, r *http.Request) (*Response,
 		Content: JSON{
 			"message": "Registered successfully",
 		},
-	}, nil
+	}
 }
 
 func (s *APIServer) WithUser(handlerFunc http.HandlerFunc) http.HandlerFunc {

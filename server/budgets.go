@@ -3,31 +3,36 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/alexgaudon/budgie/models"
 	"github.com/alexgaudon/budgie/utils"
 	"github.com/go-chi/chi/v5"
 )
 
-type CreateCategoryRequest struct {
-	Name string `json:"name"`
+type CreateBudgetRequest struct {
+	Name     string    `json:"name"`
+	Category string    `json:"category"`
+	Amount   int       `json:"amount"`
+	Period   time.Time `json:"period"`
 }
 
-func (s *APIServer) registerCategories() {
-	s.Router.Route("/api/categories", func(r chi.Router) {
-		r.Get("/", s.WithUser(MakeHandler(s.getCategories)))
-		r.Get("/{id}", s.WithUser(MakeHandler(s.getCategory)))
+func (s *APIServer) registerBudgets() {
+	s.Router.Route("/api/budgets", func(r chi.Router) {
+		r.Get("/", s.WithUser(MakeHandler(s.getBudgets)))
+		r.Get("/{id}", s.WithUser(MakeHandler(s.getBudget)))
 
-		r.Post("/", s.WithUser(MakeHandler(s.createCategory)))
+		r.Post("/", s.WithUser(MakeHandler(s.createBudget)))
 
-		r.Delete("/{id}", s.WithUser(MakeHandler(s.deleteCategory)))
+		r.Delete("/", s.WithUser(MakeHandler(s.deleteBudget)))
 	})
 }
 
-func (s *APIServer) getCategories(w http.ResponseWriter, r *http.Request) *Response {
+func (s *APIServer) getBudgets(w http.ResponseWriter, r *http.Request) *Response {
 	user := r.Context().Value(ContextKey("user")).(*models.User)
 
-	categories, err := s.DB.Categories.Find(user.ID)
+	budgets, err := s.DB.Budgets.Find(user.ID)
+
 	if err != nil {
 		return &Response{
 			Status: http.StatusBadRequest,
@@ -40,17 +45,16 @@ func (s *APIServer) getCategories(w http.ResponseWriter, r *http.Request) *Respo
 	return &Response{
 		Status: http.StatusOK,
 		Content: JSON{
-			"data": categories,
+			"data": budgets,
 		},
 	}
 }
 
-func (s *APIServer) getCategory(w http.ResponseWriter, r *http.Request) *Response {
+func (s *APIServer) getBudget(w http.ResponseWriter, r *http.Request) *Response {
 	id := chi.URLParam(r, "id")
-
 	user := r.Context().Value(ContextKey("user")).(*models.User)
 
-	category, err := s.DB.Categories.FindOne(&models.Category{
+	budget, err := s.DB.Budgets.FindOne(&models.Budget{
 		ID: id,
 	})
 
@@ -63,11 +67,11 @@ func (s *APIServer) getCategory(w http.ResponseWriter, r *http.Request) *Respons
 		}
 	}
 
-	if category.UserID != user.ID {
+	if budget.UserID != user.ID {
 		return &Response{
 			Status: http.StatusNotFound,
 			Content: JSON{
-				"error": fmt.Errorf("category not found"),
+				"error": fmt.Errorf("budget not found"),
 			},
 		}
 	}
@@ -75,15 +79,15 @@ func (s *APIServer) getCategory(w http.ResponseWriter, r *http.Request) *Respons
 	return &Response{
 		Status: http.StatusOK,
 		Content: JSON{
-			"data": category,
+			"data": budget,
 		},
 	}
 }
 
-func (s *APIServer) createCategory(w http.ResponseWriter, r *http.Request) *Response {
-	ccr := &CreateCategoryRequest{}
+func (s *APIServer) createBudget(w http.ResponseWriter, r *http.Request) *Response {
+	cbr := &CreateBudgetRequest{}
 
-	err := utils.DecodeBody(r, ccr)
+	err := utils.DecodeBody(r, cbr)
 
 	if err != nil {
 		return &Response{
@@ -96,12 +100,15 @@ func (s *APIServer) createCategory(w http.ResponseWriter, r *http.Request) *Resp
 
 	user := r.Context().Value(ContextKey("user")).(*models.User)
 
-	newCategory := models.Category{
-		Name:   ccr.Name,
-		UserID: user.ID,
+	newBudget := models.Budget{
+		UserID:   user.ID,
+		Name:     cbr.Name,
+		Category: cbr.Category,
+		Amount:   cbr.Amount,
+		Period:   cbr.Period,
 	}
 
-	c, err := s.DB.Categories.Save(&newCategory)
+	b, err := s.DB.Budgets.Save(&newBudget)
 
 	if err != nil {
 		return &Response{
@@ -115,16 +122,16 @@ func (s *APIServer) createCategory(w http.ResponseWriter, r *http.Request) *Resp
 	return &Response{
 		Status: http.StatusOK,
 		Content: JSON{
-			"data": c,
+			"data": b,
 		},
 	}
 }
 
-func (s *APIServer) deleteCategory(w http.ResponseWriter, r *http.Request) *Response {
+func (s *APIServer) deleteBudget(w http.ResponseWriter, r *http.Request) *Response {
 	id := chi.URLParam(r, "id")
 	user := r.Context().Value(ContextKey("user")).(*models.User)
 
-	category, err := s.DB.Categories.FindOne(&models.Category{
+	budget, err := s.DB.Budgets.FindOne(&models.Budget{
 		ID: id,
 	})
 
@@ -137,16 +144,16 @@ func (s *APIServer) deleteCategory(w http.ResponseWriter, r *http.Request) *Resp
 		}
 	}
 
-	if category.UserID != user.ID {
+	if budget.UserID != user.ID {
 		return &Response{
 			Status: http.StatusNotFound,
 			Content: JSON{
-				"error": fmt.Errorf("category not found"),
+				"error": fmt.Errorf("budget not found"),
 			},
 		}
 	}
 
-	err = s.DB.Categories.Delete(category.ID)
+	err = s.DB.Budgets.Delete(budget.ID)
 
 	if err != nil {
 		return &Response{
@@ -158,7 +165,8 @@ func (s *APIServer) deleteCategory(w http.ResponseWriter, r *http.Request) *Resp
 	}
 
 	return &Response{
-		Status:  http.StatusNoContent,
+		Status:  http.StatusOK,
 		Content: JSON{},
 	}
+
 }

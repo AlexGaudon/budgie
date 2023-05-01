@@ -25,7 +25,20 @@ type Category struct {
 	ID        string       `json:"id"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
-	DeletedAt sql.NullTime `json:"deleted_at"`
+	DeletedAt sql.NullTime `json:"-"`
 	UserID    string       `json:"user"`
 	Name      string       `json:"name"`
+}
+
+type Budget struct {
+	ID        string       `json:"id"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
+	DeletedAt sql.NullTime `json:"-"`
+
+	UserID   string    `json:"user"`
+	Name     string    `json:"name"`
+	Category string    `json:"category"`
+	Amount   int       `json:"amount"`
+	Period   time.Time `json:"period"`
 }

@@ -19,16 +19,12 @@ import (
 type APIServer struct {
 	Router *chi.Mux
 	DB     *storage.DBStore
-	// User       models.UserRepo
-	// Categories models.CategoriesRepo
 }
 
 func NewAPIServer(db *storage.DBStore) *APIServer {
 	return &APIServer{
 		Router: chi.NewRouter(),
 		DB:     db,
-		// User:   *db.User,
-		// Categories: *db.,
 	}
 }
 
@@ -44,28 +40,24 @@ type RError struct {
 
 type JSON = map[string]any
 
-type apiFunc = func(http.ResponseWriter, *http.Request) (*Response, *RError)
+type apiFunc = func(http.ResponseWriter, *http.Request) *Response
 
-func writeResponse(w http.ResponseWriter, status int, c JSON) error {
+func writeResponse(w http.ResponseWriter, status int, c JSON) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if status == http.StatusNoContent {
-		return nil
+		return
 	}
-	return json.NewEncoder(w).Encode(c)
+	err := json.NewEncoder(w).Encode(c)
+
+	if err != nil {
+		log.Println("ERROR:", err)
+	}
 }
 
 func MakeHandler(fn apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		resp, err := fn(w, r)
-
-		if err != nil {
-			log.Println("ERROR: ", err.Err.Error())
-			writeResponse(w, err.Status, JSON{
-				"error": err.Err.Error(),
-			})
-			return
-		}
+		resp := fn(w, r)
 
 		writeResponse(w, resp.Status, resp.Content)
 	}
@@ -93,6 +85,7 @@ func (a *APIServer) ConfigureServer() {
 
 	a.registerAuth()
 	a.registerCategories()
+	a.registerBudgets()
 
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "/client/dist")
@@ -104,8 +97,12 @@ func (a *APIServer) ConfigureServer() {
 		http.ServeFile(w, r, filesDir+r.URL.Path)
 	})
 
-	chi.Walk(a.Router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+	err := chi.Walk(a.Router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		fmt.Printf("[%s]: '%s'\n", method, route)
 		return nil
 	})
+
+	if err != nil {
+		log.Println("ERROR WALKING: ", err)
+	}
 }

@@ -7,6 +7,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { AddCategory } from "../components/AddCategory";
+import { useAuth } from "../hooks/useAuth";
+import { Navigate } from "react-router-dom";
 
 type CategoryProps = {
     id: string;
@@ -37,6 +39,7 @@ export const Category = ({ id, name }: CategoryProps) => {
 };
 
 export const Categories = () => {
+    let auth = useAuth();
     const { data: categories, isLoading, error } = useCategoriesQuery();
     const [isCreating, setIsCreating] = useState(false);
     if (isLoading) {
@@ -46,6 +49,10 @@ export const Categories = () => {
     if (error) {
         console.log(error);
         return <h1>Error.</h1>;
+    }
+
+    if (!auth.isLoggedIn && !auth.isLoading) {
+        return <Navigate to="/login" />;
     }
 
     return (

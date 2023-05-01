@@ -1,81 +1,90 @@
 import { useEffect, useState } from "react";
-import { type Budget, budgetSchema } from "../types";
+import { budgetSchema } from "../types";
 
 import { z } from "zod";
 import { Navigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
+import { useBudgetsQuery, useDeleteBudgetMutation } from "../hooks/useBudgets";
+import { AddBudget } from "../components/AddBudget";
 
-const budgetResponse = z.object({
-    data: z.array(budgetSchema),
-});
+type BudgetProps = {
+    id: string;
+    name: string;
+    period: string;
+    amount: string;
+};
+
+export const Budget = ({ id, name, period, amount }: BudgetProps) => {
+    const deleteBudget = useDeleteBudgetMutation();
+    return (
+        <div
+            key={id}
+            className="border border-gray-300 rounded-md p-4 mb-4 flex justify-between items-center"
+        >
+            <div>
+                <p className="text-gray-600 text-sm">ID: {id}</p>
+                <p>
+                    {name} for {amount}
+                </p>
+                <p>for the month of {period}</p>
+            </div>
+            <button
+                onClick={() => {
+                    deleteBudget.mutateAsync(id);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-md"
+            >
+                Delete
+            </button>
+        </div>
+    );
+};
 
 export const Budgets = () => {
-    const [budgets, setBudgets] = useState<Budget[]>([]);
-    const [refresh, setRefresh] = useState(false);
-
     let auth = useAuth();
+
+    const { data: budgets, isLoading, error } = useBudgetsQuery();
+    const [isCreating, setIsCreating] = useState(false);
+    if (isLoading) {
+        return <h1>Loading...</h1>;
+    }
+
+    if (error) {
+        console.log(error);
+        return <h1>Error: {"" + error}</h1>;
+    }
 
     if (!auth.isLoggedIn && !auth.isLoading) {
         return <Navigate to="/login" />;
     }
 
-    useEffect(() => {
-        async function getBudgets() {
-            try {
-                const res = await fetch("/api/budgets", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-                if (res.ok) {
-                    console.log("was ok");
-                    const data = await res.json();
-                    const parsedData = budgetResponse.parse(data).data;
-                    setBudgets(parsedData);
-
-                    console.log(JSON.stringify(parsedData));
-                } else {
-                    console.log("oh fk");
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        getBudgets();
-    }, [refresh]);
-
-    const deleteBudget = async (id: string) => {
-        let res = await fetch(`http://localhost:3000/api/budgets/${id}`, {
-            method: "DELETE",
-        });
-        if (res.ok) {
-            setRefresh((v) => !v);
-        }
-    };
-
     return (
         <div>
-            {budgets.map((b) => {
+            <button
+                onClick={() => {
+                    setIsCreating(true);
+                }}
+            >
+                Add Budget
+            </button>
+            {isCreating && (
+                <AddBudget
+                    onFinish={() => {
+                        setIsCreating(false);
+                    }}
+                ></AddBudget>
+            )}
+
+            {budgets?.map((budget) => {
                 return (
-                    <div key={b.id}>
-                        <p>({b.id})</p>
-                        <p>
-                            {b.category}(
-                            {b.recurring ? "recurring" : "not recurring"}) for{" "}
-                            {b.amount}
-                        </p>
-                        <button
-                            onClick={() => {
-                                deleteBudget(b.id);
-                            }}
-                        >
-                            delete
-                        </button>
-                        <br />
-                    </div>
+                    <Budget
+                        key={budget.id}
+                        id={budget.id}
+                        name={budget.name}
+                        amount={budget.amount}
+                        period={budget.period}
+                    ></Budget>
                 );
             })}
         </div>
