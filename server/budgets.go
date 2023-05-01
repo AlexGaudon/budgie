@@ -11,7 +11,6 @@ import (
 )
 
 type CreateBudgetRequest struct {
-	Name     string    `json:"name"`
 	Category string    `json:"category"`
 	Amount   int       `json:"amount"`
 	Period   time.Time `json:"period"`
@@ -24,7 +23,7 @@ func (s *APIServer) registerBudgets() {
 
 		r.Post("/", s.WithUser(MakeHandler(s.createBudget)))
 
-		r.Delete("/", s.WithUser(MakeHandler(s.deleteBudget)))
+		r.Delete("/{id}", s.WithUser(MakeHandler(s.deleteBudget)))
 	})
 }
 
@@ -102,7 +101,6 @@ func (s *APIServer) createBudget(w http.ResponseWriter, r *http.Request) *Respon
 
 	newBudget := models.Budget{
 		UserID:   user.ID,
-		Name:     cbr.Name,
 		Category: cbr.Category,
 		Amount:   cbr.Amount,
 		Period:   cbr.Period,

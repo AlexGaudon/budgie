@@ -5,7 +5,6 @@ import { useCreateBudgetMutation } from "../hooks/useBudgets";
 import { useCategoriesQuery } from "../hooks/useCategories";
 
 const createBudgetSchema = z.object({
-    name: z.string(),
     category: z.string(),
     amount: z.string(),
     period: z.string(),
@@ -45,20 +44,6 @@ export const AddBudget = ({ onFinish }: { onFinish: () => void }) => {
         <div className="flex items-center justify-center h-full w-8/12">
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-2 gap-4">
-                    <label htmlFor="name">Name</label>
-                    {errors.name && "Error: " + errors.name}
-                    <input
-                        id="name"
-                        autoComplete="off"
-                        placeholder="My Category"
-                        type="text"
-                        {...register("name", {
-                            required: true,
-                            maxLength: 80,
-                        })}
-                        className="border border-gray-300 rounder-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-
                     <label htmlFor="category">Category</label>
                     {errors.category && "Error: " + errors.category}
                     <select

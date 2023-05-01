@@ -63,7 +63,7 @@ const budgetSchema = z.object({
     created_at: z.string(),
     updated_at: z.string(),
     user: z.string(),
-    name: z.string(),
+    category: z.string(),
     amount: z.number().transform((num) => {
         // Check if the input number is valid
         if (isNaN(num)) {

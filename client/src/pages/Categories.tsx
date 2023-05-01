@@ -20,7 +20,7 @@ export const Category = ({ id, name }: CategoryProps) => {
     return (
         <div
             key={id}
-            className="border border-gray-300 rounded-md p-4 mb-4 flex justify-between items-center"
+            className="border border-gray-300 rounded-md p-4 mb-4 flex justify-between items-center max-w-md"
         >
             <div>
                 <p className="text-gray-600 text-sm">ID: {id}</p>

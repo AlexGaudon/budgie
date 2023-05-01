@@ -26,7 +26,6 @@ export const useCreateBudgetMutation = () => {
         const res = await fetch("/api/budgets", {
             method: "POST",
             body: JSON.stringify({
-                name: newBudget.name,
                 category: newBudget.category,
                 period: newBudget.period,
                 amount: Number(

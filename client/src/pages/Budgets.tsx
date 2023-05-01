@@ -10,30 +10,45 @@ import { AddBudget } from "../components/AddBudget";
 
 type BudgetProps = {
     id: string;
-    name: string;
+    category: string;
     period: string;
     amount: string;
+    utilization: string;
 };
 
-export const Budget = ({ id, name, period, amount }: BudgetProps) => {
+export const Budget = ({
+    id,
+    category,
+    period,
+    amount,
+    utilization,
+}: BudgetProps) => {
     const deleteBudget = useDeleteBudgetMutation();
+
+    const amountLeft = () => {
+        // todo
+        return "$100 left";
+    };
     return (
         <div
             key={id}
-            className="border border-gray-300 rounded-md p-4 mb-4 flex justify-between items-center"
+            className="border border-gray-300 rounded-md p-4 mb-4 flex items-center max-w-md"
         >
-            <div>
-                <p className="text-gray-600 text-sm">ID: {id}</p>
+            <div className="w-5/6">
                 <p>
-                    {name} for {amount}
+                    {category}
+                    <span className="float-right">{amountLeft()}</span>
                 </p>
-                <p>for the month of {period}</p>
+                <p>
+                    <span>{utilization}</span> of{" "}
+                    <span className="text-amber-300">{amount}</span>
+                </p>
             </div>
             <button
                 onClick={() => {
                     deleteBudget.mutateAsync(id);
                 }}
-                className="px-4 py-2 bg-red-500 text-white rounded-md"
+                className="ml-2 px-4 py-2 bg-red-500 text-white rounded-md"
             >
                 Delete
             </button>
@@ -51,8 +66,7 @@ export const Budgets = () => {
     }
 
     if (error) {
-        console.log(error);
-        return <h1>Error: {"" + error}</h1>;
+        return <h1>{"" + error}</h1>;
     }
 
     if (!auth.isLoggedIn && !auth.isLoading) {
@@ -81,9 +95,10 @@ export const Budgets = () => {
                     <Budget
                         key={budget.id}
                         id={budget.id}
-                        name={budget.name}
+                        category={budget.category}
                         amount={budget.amount}
                         period={budget.period}
+                        utilization="$TODO"
                     ></Budget>
                 );
             })}

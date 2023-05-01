@@ -36,9 +36,23 @@ type Budget struct {
 	UpdatedAt time.Time    `json:"updated_at"`
 	DeletedAt sql.NullTime `json:"-"`
 
-	UserID   string    `json:"user"`
-	Name     string    `json:"name"`
-	Category string    `json:"category"`
-	Amount   int       `json:"amount"`
-	Period   time.Time `json:"period"`
+	UserID     string    `json:"user"`
+	Category   string    `json:"category"`
+	CategoryID string    `json:"category_id"`
+	Amount     int       `json:"amount"`
+	Period     time.Time `json:"period"`
+}
+
+type Transaction struct {
+	ID        string       `json:"id"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
+	DeletedAt sql.NullTime `json:"deleted_at"`
+
+	UserID      string         `json:"user"`
+	Amount      int            `json:"amount"`
+	Category    string         `json:"category"`
+	Description sql.NullString `json:"description"`
+	Vendor      string         `json:"vendor"`
+	Date        time.Time      `json:"date"`
 }
