@@ -10,7 +10,20 @@ type BudgetsRepo struct {
 }
 
 func (r *BudgetsRepo) Find(userId string) ([]*Budget, error) {
-	query := `SELECT id, userid, name, category, amount, period, created_at, updated_at, deleted_at FROM budgets WHERE userid = $1 AND deleted_at IS NULL`
+	query := `SELECT
+	budgets.id,
+	budgets.userid,
+	categories.name as category_name,
+	budgets.category,
+	budgets.amount,
+	budgets.period,
+	budgets.created_at,
+	budgets.updated_at,
+	budgets.deleted_at 
+FROM budgets 
+JOIN categories ON categories.id = budgets.category 
+WHERE budgets.deleted_at IS NULL
+AND budgets.userid = $1`
 
 	rows, err := r.DB.Query(query, userId)
 
@@ -38,7 +51,20 @@ func (r *BudgetsRepo) Find(userId string) ([]*Budget, error) {
 }
 
 func (r *BudgetsRepo) FindOne(b *Budget) (*Budget, error) {
-	query := `SELECT id, userid, name, category, amount, period, created_at, updated_at, deleted_at FROM budgets WHERE id = $1 AND deleted_at IS NULL`
+	query := `SELECT
+	budgets.id,
+	budgets.userid,
+	categories.name as category_name,
+	budgets.category,
+	budgets.amount,
+	budgets.period,
+	budgets.created_at,
+	budgets.updated_at,
+	budgets.deleted_at 
+FROM budgets 
+JOIN categories ON categories.id = budgets.category 
+WHERE budgets.deleted_at IS NULL
+AND budgets.id = $1`
 
 	if b.ID == "" {
 		return nil, fmt.Errorf("you must provide an id")
@@ -49,8 +75,8 @@ func (r *BudgetsRepo) FindOne(b *Budget) (*Budget, error) {
 	err := row.Scan(
 		&b.ID,
 		&b.UserID,
-		&b.Name,
 		&b.Category,
+		&b.CategoryID,
 		&b.Amount,
 		&b.Period,
 		&b.CreatedAt,
@@ -101,10 +127,10 @@ func (r *BudgetsRepo) Delete(id string) error {
 }
 
 func (r *BudgetsRepo) create(b *Budget) (*Budget, error) {
-	query := `INSERT INTO budgets (userid, name, category, amount, period)
-	VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, updated_at, deleted_at`
+	query := `INSERT INTO budgets (userid, category, amount, period)
+	VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at, deleted_at`
 
-	row := r.DB.QueryRow(query, b.UserID, b.Name, b.Category, b.Amount, b.Period)
+	row := r.DB.QueryRow(query, b.UserID, b.Category, b.Amount, b.Period)
 
 	err := row.Scan(&b.ID, &b.CreatedAt, &b.UpdatedAt, &b.DeletedAt)
 
@@ -128,8 +154,8 @@ func scanIntoBudget(rows *sql.Rows) (*Budget, error) {
 	err := rows.Scan(
 		&b.ID,
 		&b.UserID,
-		&b.Name,
 		&b.Category,
+		&b.CategoryID,
 		&b.Amount,
 		&b.Period,
 		&b.CreatedAt,
