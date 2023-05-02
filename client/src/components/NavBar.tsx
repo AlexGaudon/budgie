@@ -8,7 +8,7 @@ interface NavLinkProps {
     children: React.ReactNode;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ to, exact = false, children }) => {
+const NavLink = ({ to, exact = false, children }: NavLinkProps) => {
     let className =
         "text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium";
     let activeClassName =
@@ -25,7 +25,7 @@ const NavLink: React.FC<NavLinkProps> = ({ to, exact = false, children }) => {
     );
 };
 
-export const NavBar: React.FC = () => {
+export const NavBar = () => {
     let auth = useAuth();
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -122,9 +122,12 @@ export const NavBar: React.FC = () => {
                         {auth.isLoggedIn && (
                             <>
                                 <NavLink to="/budgets">Budgets</NavLink>
+
                                 <NavLink to="/transactions">
                                     Transactions
                                 </NavLink>
+
+                                <NavLink to="/categories">Categories</NavLink>
                             </>
                         )}
                     </div>

@@ -43,13 +43,13 @@ export const TransactionRow = ({
             | "vendor"
     ) => {
         setEditedRow((prevEditedRow) => {
-            const er = { ...prevEditedRow }; // Create a shallow copy of the state object
+            const er = { ...prevEditedRow };
             if (field === "date") {
                 er.date = new Date(event.target.value);
             } else {
                 er[field] = event.target.value;
             }
-            return er; // Return the updated state object
+            return er;
         });
     };
 
@@ -103,7 +103,11 @@ export const TransactionRow = ({
                 {editing ? (
                     <input
                         type="text"
-                        value={editedRow.description}
+                        value={
+                            editedRow.description != null
+                                ? editedRow.description
+                                : ""
+                        }
                         onChange={(e) => {
                             handleChange(e, "description");
                         }}
@@ -133,7 +137,7 @@ export const TransactionRow = ({
                         })}
                     </select>
                 ) : (
-                    editedRow.category_name
+                    editedRow.category
                 )}
             </td>
             <td

@@ -19,6 +19,7 @@ type DBStore struct {
 	User          *models.UserRepo
 	Categories    *models.CategoriesRepo
 	Budgets       *models.BudgetsRepo
+	Transactions  *models.TransactionsRepo
 }
 
 func (d *DBStore) Initialize() error {
@@ -31,6 +32,10 @@ func (d *DBStore) Initialize() error {
 	}
 
 	d.Budgets = &models.BudgetsRepo{
+		DB: d.db,
+	}
+
+	d.Transactions = &models.TransactionsRepo{
 		DB: d.db,
 	}
 

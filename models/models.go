@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"encoding/json"
+	"reflect"
 	"time"
 )
 
@@ -52,7 +54,40 @@ type Transaction struct {
 	UserID      string         `json:"user"`
 	Amount      int            `json:"amount"`
 	Category    string         `json:"category"`
-	Description sql.NullString `json:"description"`
+	CategoryID  string         `json:"category_id"`
+	Description OptionalString `json:"description"`
 	Vendor      string         `json:"vendor"`
 	Date        time.Time      `json:"date"`
+	Type        string         `json:"type"`
+}
+
+type OptionalString sql.NullString
+
+func (os *OptionalString) Scan(value interface{}) error {
+	var s sql.NullString
+
+	if err := s.Scan(value); err != nil {
+		return err
+	}
+
+	if reflect.TypeOf(value) == nil {
+		*os = OptionalString{s.String, false}
+	} else {
+		*os = OptionalString{s.String, true}
+	}
+	return nil
+}
+
+func (os *OptionalString) MarshalJSON() ([]byte, error) {
+	if !os.Valid {
+		return []byte("null"), nil
+	}
+
+	return json.Marshal(os.String)
+}
+
+func (os *OptionalString) UnmarshalJSON(b []byte) error {
+	err := json.Unmarshal(b, &os.String)
+	os.Valid = (err == nil)
+	return err
 }

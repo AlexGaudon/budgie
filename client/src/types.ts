@@ -2,11 +2,11 @@ import { TypeOf, z } from "zod";
 
 const transactionSchema = z.object({
     id: z.string(),
-    userid: z.string(),
+    user: z.string(),
     vendor: z.string(),
-    description: z.string(),
+    description: z.string().nullable(),
     category_id: z.string(),
-    category_name: z.string(),
+    category: z.string(),
     amount: z.number().transform((num) => {
         // Check if the input number is valid
         if (isNaN(num)) {
@@ -27,7 +27,6 @@ const transactionSchema = z.object({
     date: z.string().transform((str) => new Date(str)),
     updated_at: z.string(),
     created_at: z.string(),
-    deleted_at: z.string().nullable(),
 });
 
 type Transaction = z.infer<typeof transactionSchema>;

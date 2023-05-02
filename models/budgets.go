@@ -27,10 +27,6 @@ AND budgets.userid = $1`
 
 	rows, err := r.DB.Query(query, userId)
 
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("no categories found")
-	}
-
 	if err != nil {
 		return nil, err
 	}
@@ -72,16 +68,18 @@ AND budgets.id = $1`
 
 	row := r.DB.QueryRow(query, b.ID)
 
+	budget := &Budget{}
+
 	err := row.Scan(
-		&b.ID,
-		&b.UserID,
-		&b.Category,
-		&b.CategoryID,
-		&b.Amount,
-		&b.Period,
-		&b.CreatedAt,
-		&b.UpdatedAt,
-		&b.DeletedAt,
+		&budget.ID,
+		&budget.UserID,
+		&budget.Category,
+		&budget.CategoryID,
+		&budget.Amount,
+		&budget.Period,
+		&budget.CreatedAt,
+		&budget.UpdatedAt,
+		&budget.DeletedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -92,7 +90,7 @@ AND budgets.id = $1`
 		return nil, err
 	}
 
-	return b, nil
+	return budget, nil
 }
 
 func (r *BudgetsRepo) Exists(b *Budget) bool {
@@ -115,9 +113,7 @@ func (r *BudgetsRepo) Save(b *Budget) (*Budget, error) {
 func (r *BudgetsRepo) Delete(id string) error {
 	query := `UPDATE budgets SET deleted_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $1`
 
-	rows, err := r.DB.Query(query, id)
-
-	rows.Close()
+	_, err := r.DB.Exec(query, id)
 
 	if err != nil {
 		return err
@@ -136,10 +132,6 @@ func (r *BudgetsRepo) create(b *Budget) (*Budget, error) {
 
 	if err != nil {
 		return nil, err
-	}
-
-	if b.ID == "" {
-		return nil, fmt.Errorf("error creating budget")
 	}
 
 	return b, nil

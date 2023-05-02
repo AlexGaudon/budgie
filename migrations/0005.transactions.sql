@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     userid UUID REFERENCES users(id) NOT NULL,
     amount INTEGER NOT NULL,
     category UUID REFERENCES categories(id) NOT NULL,
-    description VARCHAR(255) NOT NULL,
+    description VARCHAR(255),
     vendor VARCHAR(255) NOT NULL,
     date TIMESTAMP NOT NULL,
     type VARCHAR(255) NOT NULL,

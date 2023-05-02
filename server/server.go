@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -83,9 +82,12 @@ func (a *APIServer) ConfigureServer() {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
+	log.Println("Registering routes...")
+
 	a.registerAuth()
 	a.registerCategories()
 	a.registerBudgets()
+	a.registerTransactions()
 
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "/client/dist")
@@ -98,9 +100,11 @@ func (a *APIServer) ConfigureServer() {
 	})
 
 	err := chi.Walk(a.Router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		fmt.Printf("[%s]: '%s'\n", method, route)
+		log.Printf("[%s]: '%s'\n", method, route)
 		return nil
 	})
+
+	log.Println("Registered all routes")
 
 	if err != nil {
 		log.Println("ERROR WALKING: ", err)

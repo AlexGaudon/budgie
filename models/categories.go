@@ -42,13 +42,15 @@ func (r *CategoriesRepo) FindOne(c *Category) (*Category, error) {
 
 	row := r.DB.QueryRow(query, c.ID)
 
+	category := &Category{}
+
 	err := row.Scan(
-		&c.ID,
-		&c.UserID,
-		&c.Name,
-		&c.CreatedAt,
-		&c.UpdatedAt,
-		&c.DeletedAt,
+		&category.ID,
+		&category.UserID,
+		&category.Name,
+		&category.CreatedAt,
+		&category.UpdatedAt,
+		&category.DeletedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -59,7 +61,7 @@ func (r *CategoriesRepo) FindOne(c *Category) (*Category, error) {
 		return nil, err
 	}
 
-	return c, nil
+	return category, nil
 }
 
 func (r *CategoriesRepo) Exists(c *Category) bool {
@@ -79,9 +81,7 @@ func (r *CategoriesRepo) Save(c *Category) (*Category, error) {
 func (r *CategoriesRepo) Delete(id string) error {
 	query := `UPDATE categories SET deleted_at = (NOW() AT TIME ZONE 'UTC') WHERE id = $1`
 
-	rows, err := r.DB.Query(query, id)
-
-	rows.Close()
+	_, err := r.DB.Exec(query, id)
 
 	if err != nil {
 		return err

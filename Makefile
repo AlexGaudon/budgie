@@ -2,6 +2,9 @@ build:
 	go build -o bin/budgie
 	cd client && npm run build && cd ..
 
+dev:
+	go build -o bin/budgie
+	./bin/budgie
 
 run: build
 	./bin/budgie
