@@ -9,6 +9,20 @@ type BudgetsRepo struct {
 	DB *sql.DB
 }
 
+type budgetPredicateFunction func(*Budget) bool
+
+func (r *BudgetsRepo) Filter(budgets []*Budget, pred budgetPredicateFunction) []*Budget {
+	filtered := []*Budget{}
+
+	for _, budget := range budgets {
+		if pred(budget) {
+			filtered = append(filtered, budget)
+		}
+	}
+
+	return filtered
+}
+
 func (r *BudgetsRepo) Find(userId string) ([]*Budget, error) {
 	query := `SELECT
 	budgets.id,

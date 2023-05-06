@@ -5,6 +5,59 @@ import { z } from "zod";
 import { type Budget, budgetSchema } from "../types";
 import { CreateBudgetForm } from "../components/AddBudget";
 
+const budgetUtilSchema = z.object({
+    id: z.string(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    user: z.string(),
+    category: z.string(),
+    amount: z.number().transform((num) => {
+        // Check if the input number is valid
+        if (isNaN(num)) {
+            throw new Error("Invalid amount value");
+        }
+
+        num /= 100;
+
+        // Convert the number to currency format
+        return num.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+        });
+    }),
+    period: z.string().transform((input) => {
+        return new Date(input).toISOString().substring(0, 7);
+    }),
+    utilization: z.number().transform((num) => {
+        // Check if the input number is valid
+        if (isNaN(num)) {
+            throw new Error("Invalid amount value");
+        }
+
+        num /= 100;
+
+        // Convert the number to currency format
+        return num.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+        });
+    }),
+});
+
+const fetchBudgetsByPeriod = async (period: string) => {
+    const res = await fetch(`/api/budgets/utilization/${period}`);
+
+    if (res.ok) {
+        const data = await res.json();
+        if ("data" in data) {
+            const parsed = z.array(budgetUtilSchema).parse(data.data);
+            return parsed;
+        }
+    } else {
+        throw new Error("Error fetching budgets");
+    }
+};
+
 const fetchBudgets = async () => {
     const res = await fetch("/api/budgets");
 
@@ -85,4 +138,12 @@ export const useDeleteBudgetMutation = () => {
 
 export const useBudgetsQuery = () => {
     return useQuery("budgets", fetchBudgets);
+};
+
+export const useBudgetsUtilizationQuery = () => {
+    return (period: string) => {
+        return useQuery(["budgetsItl", period], () =>
+            fetchBudgetsByPeriod(period)
+        );
+    };
 };

@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { budgetSchema } from "../types";
+import { useState } from "react";
 
-import { z } from "zod";
 import { Navigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
-import { useBudgetsQuery, useDeleteBudgetMutation } from "../hooks/useBudgets";
+import {
+    useBudgetsQuery,
+    useBudgetsUtilizationQuery,
+    useDeleteBudgetMutation,
+} from "../hooks/useBudgets";
 import { AddBudget } from "../components/AddBudget";
 
 type BudgetProps = {
@@ -23,35 +25,49 @@ export const Budget = ({
     amount,
     utilization,
 }: BudgetProps) => {
-    const deleteBudget = useDeleteBudgetMutation();
+    const getAmtAsNums = () => {
+        let amtNum = parseFloat(amount.replace("$", "").replace(",", ""));
+        let utilNum = parseFloat(utilization.replace("$", "").replace(",", ""));
 
-    const amountLeft = () => {
-        // todo
-        return "$100 left";
+        return { amtNum, utilNum };
     };
+    const amountRemaining = () => {
+        let { amtNum, utilNum } = getAmtAsNums();
+        // return "$" + (amtNum - utilNum).toFixed(2);
+        return `$${(amtNum - utilNum).toLocaleString("en-US", {
+            currency: "USD",
+        })}`;
+    };
+
+    const utilPercent = () => {
+        let { amtNum, utilNum } = getAmtAsNums();
+
+        return (utilNum / amtNum) * 100;
+    };
+
     return (
-        <div
-            key={id}
-            className="border border-gray-300 rounded-md p-4 mb-4 flex items-center max-w-md"
-        >
-            <div className="w-5/6">
+        <div className="border border-gray-300 p-4 mb-4 flex items-center max-w-md">
+            <div className="w-full">
                 <p>
                     {category}
-                    <span className="float-right">{amountLeft()}</span>
+                    <span className="float-right">
+                        {amountRemaining()} left
+                    </span>
                 </p>
+
+                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                    <div
+                        className="bg-blue-300 h-2.5 rounded-full"
+                        style={{
+                            width: utilPercent() + "%",
+                        }}
+                    ></div>
+                </div>
+
                 <p>
-                    <span>{utilization}</span> of{" "}
-                    <span className="text-amber-300">{amount}</span>
+                    {utilization} of {amount}
                 </p>
             </div>
-            <button
-                onClick={() => {
-                    deleteBudget.mutateAsync(id);
-                }}
-                className="ml-2 px-4 py-2 bg-red-500 text-white rounded-md"
-            >
-                Delete
-            </button>
         </div>
     );
 };
@@ -59,8 +75,18 @@ export const Budget = ({
 export const Budgets = () => {
     let auth = useAuth();
 
-    const { data: budgets, isLoading, error } = useBudgetsQuery();
+    const [year, setYear] = useState(new Date().getFullYear().toString());
+    const [month, setMonth] = useState(
+        new Date().getMonth() < 10
+            ? "0" + (new Date().getMonth() + 1)
+            : new Date().getMonth() + 1
+    );
+
+    const getBudgets = useBudgetsUtilizationQuery();
+    const { data: budgets, isLoading, error } = getBudgets(year + "-" + month);
+
     const [isCreating, setIsCreating] = useState(false);
+
     if (isLoading) {
         return <h1>Loading...</h1>;
     }
@@ -75,7 +101,45 @@ export const Budgets = () => {
 
     return (
         <div>
+            <div className="flex items-center space-x-4">
+                <select
+                    className="rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    value={year}
+                    onChange={(e) => {
+                        setYear(e.target.value);
+                    }}
+                >
+                    <option value="">Year</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                </select>
+
+                <select
+                    className="rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    value={month}
+                    onChange={(e) => {
+                        setMonth(e.target.value);
+                    }}
+                >
+                    <option value="">Month</option>
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+
             <button
+                className="bg-blue-300 text-gray-900 px-3 py-2 rounded-md text-sm font-medium mb-4"
                 onClick={() => {
                     setIsCreating(true);
                 }}
@@ -89,19 +153,20 @@ export const Budgets = () => {
                     }}
                 ></AddBudget>
             )}
-
-            {budgets?.map((budget) => {
-                return (
-                    <Budget
-                        key={budget.id}
-                        id={budget.id}
-                        category={budget.category}
-                        amount={budget.amount}
-                        period={budget.period}
-                        utilization="$TODO"
-                    ></Budget>
-                );
-            })}
+            <div className="grid grid-cols-3 gap-4">
+                {budgets?.map((budget) => {
+                    return (
+                        <Budget
+                            key={budget.id}
+                            id={budget.id}
+                            category={budget.category}
+                            amount={budget.amount}
+                            period={budget.period}
+                            utilization={budget.utilization}
+                        ></Budget>
+                    );
+                })}
+            </div>
         </div>
     );
 };

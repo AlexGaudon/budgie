@@ -10,6 +10,20 @@ type TransactionsRepo struct {
 	DB *sql.DB
 }
 
+type transactionPredicateFunction func(*Transaction) bool
+
+func (r *TransactionsRepo) Filter(transactions []*Transaction, pred transactionPredicateFunction) []*Transaction {
+	filtered := []*Transaction{}
+
+	for _, transaction := range transactions {
+		if pred(transaction) {
+			filtered = append(filtered, transaction)
+		}
+	}
+
+	return filtered
+}
+
 func (r *TransactionsRepo) Find(userId string) ([]*Transaction, error) {
 	query := `
 SELECT t.id,

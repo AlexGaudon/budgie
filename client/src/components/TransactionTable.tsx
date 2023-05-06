@@ -71,7 +71,6 @@ export const TransactionTable = () => {
                 </thead>
                 <tbody>
                     {transactions?.map((row, index) => {
-                        console.log(row.id);
                         return (
                             <TransactionRow
                                 key={row.id}
