@@ -36,6 +36,10 @@ func main() {
 
 	log.Println("Starting web server on port " + port)
 
+	server.StartCron()
+
+	defer server.StopCron()
+
 	err = http.ListenAndServe(":"+port, server.Router)
 
 	if err != nil {

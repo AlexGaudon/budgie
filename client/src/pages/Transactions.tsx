@@ -10,5 +10,9 @@ export const Transactions = () => {
         return <Navigate to="/"></Navigate>;
     }
 
-    return <TransactionTable></TransactionTable>;
+    return (
+        <div>
+            <TransactionTable></TransactionTable>
+        </div>
+    );
 };

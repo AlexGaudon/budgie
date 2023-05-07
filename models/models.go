@@ -61,6 +61,15 @@ type Transaction struct {
 	Type        string         `json:"type"`
 }
 
+type RecurringTransaction struct {
+	Transaction
+
+	LastExecution time.Time `json:"last_execution"`
+	NextExecution time.Time `json:"next_execution"`
+	UnitOfMeasure string    `json:"unit_of_measure"`
+	Frequency     int       `json:"frequency_count"`
+}
+
 type OptionalString sql.NullString
 
 func (os *OptionalString) Scan(value interface{}) error {

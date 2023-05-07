@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/go-co-op/gocron"
 )
 
 type APIServer struct {
@@ -57,9 +58,23 @@ func writeResponse(w http.ResponseWriter, status int, c JSON) {
 func MakeHandler(fn apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		resp := fn(w, r)
-
 		writeResponse(w, resp.Status, resp.Content)
 	}
+}
+
+func (a *APIServer) StartCron() {
+	s := gocron.NewScheduler(time.UTC)
+
+	s.Every(1).Minutes().Do(func() {
+		a.HandleRecurringTransactions()
+		// fmt.Println("yeehaw")
+	})
+
+	s.StartAsync()
+}
+
+func (a *APIServer) StopCron() {
+	panic("notimplemented")
 }
 
 func (a *APIServer) ConfigureServer() {
@@ -88,6 +103,7 @@ func (a *APIServer) ConfigureServer() {
 	a.registerCategories()
 	a.registerBudgets()
 	a.registerTransactions()
+	a.registerRecurringTransactions()
 
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "/client/dist")

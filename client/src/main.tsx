@@ -8,7 +8,6 @@ import {
     createRoutesFromElements,
     Route,
     RouterProvider,
-    useNavigate,
 } from "react-router-dom";
 import { Transactions } from "./pages/Transactions";
 import { Layout } from "./Layout";
@@ -18,6 +17,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { Budgets } from "./pages/Budgets";
 import { Categories } from "./pages/Categories";
 import { QueryClient, QueryClientProvider } from "react-query";
+import { NewTransaction } from "./pages/NewTransaction";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
@@ -27,6 +27,7 @@ const router = createBrowserRouter(
             <Route path="categories" element={<Categories />} />
             <Route path="budgets" element={<Budgets />} />
             <Route path="transactions" element={<Transactions />} />
+            <Route path="newtransaction" element={<NewTransaction />} />
         </Route>
     )
 );

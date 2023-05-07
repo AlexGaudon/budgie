@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type Transaction } from "../types";
 
 import { TransactionRow } from "./TransactionRow";
@@ -14,9 +14,23 @@ export const TransactionTable = () => {
     const [editingIndex, setEditingIndex] = useState(-1);
     const [creatingTransaction, setCreatingTransaction] = useState(false);
 
+    const [visibleCategories, setVisibleCategories] = useState<string[]>([]);
+
     const { data: transactions, isLoading, error } = useTransactionQuery();
     const updateTransaction = useUpdateTransactionMutation();
     const deleteTransaction = useDeleteTransactionMutation();
+
+    const filteredTransactions = useMemo(() => {
+        if (!transactions) return [];
+
+        let filtered = [...transactions];
+
+        filtered = filtered.filter((t) => {
+            visibleCategories.includes(t.category);
+        });
+
+        return filtered;
+    }, [transactions, visibleCategories]);
 
     if (isLoading) {
         return <h1>isloading</h1>;
@@ -71,6 +85,7 @@ export const TransactionTable = () => {
                 </thead>
                 <tbody>
                     {transactions?.map((row, index) => {
+                        console.log(row);
                         return (
                             <TransactionRow
                                 key={row.id}

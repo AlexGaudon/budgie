@@ -1,10 +1,9 @@
-FROM golang:1.20
+# Build stage
+FROM golang:1.20 AS build
 
 WORKDIR /app
 
-ADD go.mod .
-ADD go.sum .
-
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY *.go ./
@@ -13,10 +12,16 @@ COPY storage/* ./storage/
 COPY utils/* ./utils/
 COPY config/* ./config/
 COPY models/* ./models/
-COPY client/dist/* ./client/dist
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /budgie
+RUN CGO_ENABLED=0 go build -o budgie
+
+# Final stage
+FROM scratch
+
+COPY --from=build /app/budgie /app/
+COPY migrations/* ./migrations/
+COPY client/* ./client/
 
 EXPOSE 3000
 
-CMD ["/budgie"]
+CMD ["/app/budgie"]

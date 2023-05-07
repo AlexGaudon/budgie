@@ -26,7 +26,8 @@ func (r *TransactionsRepo) Filter(transactions []*Transaction, pred transactionP
 
 func (r *TransactionsRepo) Find(userId string) ([]*Transaction, error) {
 	query := `
-SELECT t.id,
+SELECT
+	t.id,
 	t.userid,
 	t.amount,
 	categories.NAME AS category_name,
@@ -134,7 +135,6 @@ func (r *TransactionsRepo) Delete(id string) error {
 }
 
 func (r *TransactionsRepo) Save(t *Transaction) (*Transaction, error) {
-	fmt.Println("SAVE:", t.Description)
 	if r.Exists(t) {
 		return r.update(t)
 	}
@@ -157,7 +157,6 @@ func (r *TransactionsRepo) create(t *Transaction) (*Transaction, error) {
 }
 
 func (r *TransactionsRepo) update(t *Transaction) (*Transaction, error) {
-	fmt.Println("inside update: ", t.Description)
 	query := `UPDATE transactions SET
 	amount = $1,
 	category = $2,

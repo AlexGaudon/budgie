@@ -66,9 +66,9 @@ export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
     };
 
     return (
-        <div className="flex items-center justify-center h-full w-8/12">
+        <div className="flex items-center justify-center h-full w-10/12">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <label htmlFor="vendor">Vendor</label>
                     <input
                         id="vendor"
@@ -81,7 +81,6 @@ export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
                         })}
                         className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-
                     <label htmlFor="description">Description</label>
                     <input
                         id="description"
@@ -167,7 +166,7 @@ export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
 
                 <input
                     type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor:pointer"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor:pointer w-full"
                 />
             </form>
         </div>

@@ -12,5 +12,8 @@ run: build
 image:
 	DOCKER_DEFAULT_PLATFORM=linux/amd64 docker build .
 
+image-mac:
+	docker build .
+
 lint:
 	golangci-lint run

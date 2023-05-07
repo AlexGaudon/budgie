@@ -14,12 +14,13 @@ import (
 )
 
 type DBStore struct {
-	migrationPath string
-	db            *sql.DB
-	User          *models.UserRepo
-	Categories    *models.CategoriesRepo
-	Budgets       *models.BudgetsRepo
-	Transactions  *models.TransactionsRepo
+	migrationPath         string
+	db                    *sql.DB
+	User                  *models.UserRepo
+	Categories            *models.CategoriesRepo
+	Budgets               *models.BudgetsRepo
+	Transactions          *models.TransactionsRepo
+	RecurringTransactions *models.RecurringTransactionRepo
 }
 
 func (d *DBStore) Initialize() error {
@@ -36,6 +37,10 @@ func (d *DBStore) Initialize() error {
 	}
 
 	d.Transactions = &models.TransactionsRepo{
+		DB: d.db,
+	}
+
+	d.RecurringTransactions = &models.RecurringTransactionRepo{
 		DB: d.db,
 	}
 
@@ -136,6 +141,8 @@ func ConnectDatabase(migrationPath string) (*DBStore, error) {
 	config := config.GetConfig()
 	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		config.DBHost, config.DBPort, config.DBName, config.DBUserName, config.DBUserPassword)
+
+	fmt.Println(connStr)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {

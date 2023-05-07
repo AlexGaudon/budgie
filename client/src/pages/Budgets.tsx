@@ -103,20 +103,6 @@ export const Budgets = () => {
         <div>
             <div className="flex items-center space-x-4">
                 <select
-                    className="rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                    value={year}
-                    onChange={(e) => {
-                        setYear(e.target.value);
-                    }}
-                >
-                    <option value="">Year</option>
-                    <option value="2022">2022</option>
-                    <option value="2023">2023</option>
-                    <option value="2024">2024</option>
-                </select>
-
-                <select
-                    className="rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
                     value={month}
                     onChange={(e) => {
                         setMonth(e.target.value);
@@ -136,16 +122,19 @@ export const Budgets = () => {
                     <option value="11">November</option>
                     <option value="12">December</option>
                 </select>
+                <select
+                    value={year}
+                    onChange={(e) => {
+                        setYear(e.target.value);
+                    }}
+                >
+                    <option value="">Year</option>
+                    <option value="2022">2022</option>
+                    <option value="2023">2023</option>
+                    <option value="2024">2024</option>
+                </select>
             </div>
 
-            <button
-                className="bg-blue-300 text-gray-900 px-3 py-2 rounded-md text-sm font-medium mb-4"
-                onClick={() => {
-                    setIsCreating(true);
-                }}
-            >
-                Add Budget
-            </button>
             {isCreating && (
                 <AddBudget
                     onFinish={() => {

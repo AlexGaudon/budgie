@@ -1,10 +1,7 @@
-import { useForm } from "react-hook-form";
 import {
     useCategoriesQuery,
     useDeleteCategoryMutation,
 } from "../hooks/useCategories";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { AddCategory } from "../components/AddCategory";
 import { useAuth } from "../hooks/useAuth";
@@ -17,6 +14,11 @@ type CategoryProps = {
 
 export const Category = ({ id, name }: CategoryProps) => {
     const deleteCategory = useDeleteCategoryMutation();
+
+    const showCategory = () => {
+        console.log("CALLING");
+        return <Navigate to={`transactions`} />;
+    };
     return (
         <div
             key={id}
@@ -26,6 +28,13 @@ export const Category = ({ id, name }: CategoryProps) => {
                 <p className="text-gray-600 text-sm">ID: {id}</p>
                 <p>{name}</p>
             </div>
+            <button
+                onClick={() => {
+                    showCategory();
+                }}
+            >
+                VIEW
+            </button>
             <button
                 onClick={() => {
                     deleteCategory.mutateAsync(id);
