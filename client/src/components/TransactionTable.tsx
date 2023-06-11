@@ -90,7 +90,7 @@ export const TransactionTable = ({ isAdding }: TransactionTableProps) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {transactions.map((row, index) => {
+                    {transactions?.map((row, index) => {
                         return (
                             <TransactionRow
                                 key={row.id}
