@@ -137,6 +137,7 @@ func ConnectDatabase(migrationPath string) (*DBStore, error) {
 	connStr := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable",
 		config.DBHost, config.DBPort, config.DBName, config.DBUserName, config.DBUserPassword)
 
+	fmt.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err

@@ -1,22 +1,61 @@
 import { useEffect, useState } from "react";
-import { type Transaction } from "../types";
+import { Category, type Transaction } from "../types";
+
+import { useLocation } from "react-router-dom";
 
 import { TransactionRow } from "./TransactionRow";
-import { AddTransaction } from "./AddTransaction";
 import {
     useCreateTransactionMutation,
     useDeleteTransactionMutation,
     useTransactionQuery,
     useUpdateTransactionMutation,
 } from "../hooks/useTransactions";
+import { useCategoriesQuery } from "../hooks/useCategories";
 
-export const TransactionTable = () => {
-    const [editingIndex, setEditingIndex] = useState(-1);
-    const [creatingTransaction, setCreatingTransaction] = useState(false);
+type TransactionTableProps = {
+    isAdding: boolean;
+};
 
-    const { data: transactions, isLoading, error } = useTransactionQuery();
+export const TransactionTable = ({ isAdding }: TransactionTableProps) => {
+    const [editingIndex, setEditingIndex] = useState(0);
+
+    const { data: categories } = useCategoriesQuery();
+
+    const createTransactionMutation = useCreateTransactionMutation();
+
     const updateTransaction = useUpdateTransactionMutation();
     const deleteTransaction = useDeleteTransactionMutation();
+
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const filter = searchParams.get("filter") as string | undefined;
+
+    const { data: transactions, isLoading } = useTransactionQuery(filter);
+
+    useEffect(() => {
+        if (isAdding) {
+            let defaultCategory = categories?.find(
+                (e: Category) => e.name === "Uncategorized"
+            );
+
+            async function makeDefault() {
+                if (defaultCategory === undefined) {
+                    return;
+                }
+                await createTransactionMutation.mutateAsync({
+                    vendor: "",
+                    description: "",
+                    category: defaultCategory.id,
+                    amount: "0.00",
+                    type: "expense",
+                    date: new Date().toISOString().substring(0, 10),
+                });
+                transactions?.unshift();
+            }
+
+            makeDefault();
+        }
+    }, [isAdding]);
 
     if (isLoading) {
         return <h1>isloading</h1>;
@@ -36,28 +75,9 @@ export const TransactionTable = () => {
         }
     };
 
-    const showAddTransaction = () => {
-        setCreatingTransaction(true);
-    };
-
     return (
         <div className="w-8/12">
-            <div className="container m-8">
-                {(creatingTransaction && (
-                    <AddTransaction
-                        onFinish={() => {
-                            setCreatingTransaction(false);
-                        }}
-                    />
-                )) || (
-                    <button
-                        className="bg-gray-900 text-white px-3 py-2 rounded-md text-sm font-medium"
-                        onClick={showAddTransaction}
-                    >
-                        Add Transaction
-                    </button>
-                )}
-            </div>
+            <div className="container"></div>
             <table className="table-auto w-full">
                 <thead>
                     <tr className="border">
@@ -70,7 +90,7 @@ export const TransactionTable = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {transactions?.map((row, index) => {
+                    {transactions.map((row, index) => {
                         return (
                             <TransactionRow
                                 key={row.id}

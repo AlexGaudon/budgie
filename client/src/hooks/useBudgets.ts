@@ -142,7 +142,7 @@ export const useBudgetsQuery = () => {
 
 export const useBudgetsUtilizationQuery = () => {
     return (period: string) => {
-        return useQuery(["budgetsItl", period], () =>
+        return useQuery(["budgets", period], () =>
             fetchBudgetsByPeriod(period)
         );
     };

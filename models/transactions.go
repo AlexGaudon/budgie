@@ -134,7 +134,6 @@ func (r *TransactionsRepo) Delete(id string) error {
 }
 
 func (r *TransactionsRepo) Save(t *Transaction) (*Transaction, error) {
-	fmt.Println("SAVE:", t.Description)
 	if r.Exists(t) {
 		return r.update(t)
 	}

@@ -1,9 +1,9 @@
 build:
-	go build -o bin/budgie
+	go build -o bin/budgie cmd/server/main.go
 	cd client && npm run build && cd ..
 
 dev:
-	go build -o bin/budgie
+	go build -o bin/budgie cmd/server/main.go
 	./bin/budgie
 
 run: build

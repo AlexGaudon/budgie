@@ -17,24 +17,19 @@ type CategoryProps = {
 
 export const Category = ({ id, name }: CategoryProps) => {
     const deleteCategory = useDeleteCategoryMutation();
+
     return (
-        <div
-            key={id}
-            className="border border-gray-300 rounded-md p-4 mb-4 flex justify-between items-center max-w-md"
-        >
-            <div>
-                <p className="text-gray-600 text-sm">ID: {id}</p>
-                <p>{name}</p>
-            </div>
-            <button
-                onClick={() => {
-                    deleteCategory.mutateAsync(id);
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded-md"
-            >
-                Delete
-            </button>
-        </div>
+        <tr key={id}>
+            <td className="border px-4 py-2">{name}</td>
+            <td className="border px-4 py-2">
+                <button
+                    className="px-4 py-2 bg-red-500 text-white rounded-md"
+                    onClick={() => deleteCategory.mutateAsync(id)}
+                >
+                    Delete
+                </button>
+            </td>
+        </tr>
     );
 };
 
@@ -58,6 +53,7 @@ export const Categories = () => {
     return (
         <div>
             <button
+                className="px-4 py-4 rounded-md bg-blue-500 hover:bg-blue-600"
                 onClick={() => {
                     setIsCreating(true);
                 }}
@@ -72,9 +68,25 @@ export const Categories = () => {
                 ></AddCategory>
             )}
 
-            {categories?.map((c) => {
-                return <Category key={c.id} id={c.id} name={c.name}></Category>;
-            })}
+            <table className="table-auto w-auto">
+                <thead>
+                    <tr className="border">
+                        <th className="px-4 py-2">Category Name</th>
+                        <th className="px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {categories?.map((c) => {
+                        return (
+                            <Category
+                                key={c.id}
+                                id={c.id}
+                                name={c.name}
+                            ></Category>
+                        );
+                    })}
+                </tbody>
+            </table>
         </div>
     );
 };

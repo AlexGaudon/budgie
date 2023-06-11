@@ -5,13 +5,17 @@ import { z } from "zod";
 import { type Transaction, transactionSchema } from "../types";
 import { CreateTransactionForm } from "../components/AddTransaction";
 
-const fetchTransactions = async () => {
+const fetchTransactions = async (filter: string|undefined) => {
     const res = await fetch("/api/transactions");
 
     if (res.ok) {
         const data = await res.json();
         if ("data" in data) {
             const parsed = z.array(transactionSchema).parse(data.data);
+            // Apply filtering if a filter is provided
+            if (filter) {
+                return parsed.filter((transaction) => transaction.category === filter);
+            }
             return parsed;
         } else {
             throw new Error("Error fetching transactions");
@@ -96,6 +100,8 @@ export const useDeleteTransactionMutation = () => {
     });
 };
 
-export const useTransactionQuery = () => {
-    return useQuery("transactions", fetchTransactions);
+export const useTransactionQuery = (filter: string | undefined) => {
+    return useQuery(["transactions", filter], () =>
+        fetchTransactions(filter)
+    );
 };

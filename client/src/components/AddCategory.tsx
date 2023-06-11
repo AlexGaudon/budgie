@@ -1,10 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-    useCategoriesQuery,
-    useCreateCategoryMutation,
-} from "../hooks/useCategories";
+import { useCreateCategoryMutation } from "../hooks/useCategories";
 
 const categoryCreateSchema = z.object({
     name: z.string(),

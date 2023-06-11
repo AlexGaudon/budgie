@@ -1,13 +1,9 @@
 import { useState } from "react";
 
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
-import {
-    useBudgetsQuery,
-    useBudgetsUtilizationQuery,
-    useDeleteBudgetMutation,
-} from "../hooks/useBudgets";
+import { useBudgetsUtilizationQuery } from "../hooks/useBudgets";
 import { AddBudget } from "../components/AddBudget";
 
 type BudgetProps = {
@@ -33,7 +29,6 @@ export const Budget = ({
     };
     const amountRemaining = () => {
         let { amtNum, utilNum } = getAmtAsNums();
-        // return "$" + (amtNum - utilNum).toFixed(2);
         return `$${(amtNum - utilNum).toLocaleString("en-US", {
             currency: "USD",
         })}`;
@@ -41,7 +36,6 @@ export const Budget = ({
 
     const utilPercent = () => {
         let { amtNum, utilNum } = getAmtAsNums();
-
         return (utilNum / amtNum) * 100;
     };
 
@@ -49,7 +43,13 @@ export const Budget = ({
         <div className="border border-gray-300 p-4 mb-4 flex items-center max-w-md">
             <div className="w-full">
                 <p>
-                    {category}
+                    <Link
+                        to={`/transactions?filter=${encodeURIComponent(
+                            category
+                        )}`}
+                    >
+                        {category}
+                    </Link>
                     <span className="float-right">
                         {amountRemaining()} left
                     </span>
@@ -57,9 +57,16 @@ export const Budget = ({
 
                 <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
                     <div
-                        className="bg-blue-300 h-2.5 rounded-full"
+                        className={
+                            utilPercent() < 100
+                                ? "bg-blue-300 h-2.5 rounded-full"
+                                : "bg-red-400 h-2.5 rounded-full"
+                        }
                         style={{
-                            width: utilPercent() + "%",
+                            width:
+                                utilPercent() < 100
+                                    ? utilPercent() + "%"
+                                    : 100 + "%",
                         }}
                     ></div>
                 </div>

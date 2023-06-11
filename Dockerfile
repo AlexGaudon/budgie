@@ -1,22 +1,11 @@
-FROM golang:1.20
-
+# Build stage
+FROM golang:1.20-alpine AS build
 WORKDIR /app
+COPY . .
+RUN ls && go build -o bin/app cmd/server/main.go
 
-ADD go.mod .
-ADD go.sum .
-
-RUN go mod download
-
-COPY *.go ./
-COPY server/* ./server/
-COPY storage/* ./storage/
-COPY utils/* ./utils/
-COPY config/* ./config/
-COPY models/* ./models/
-COPY client/dist/* ./client/dist
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o /budgie
-
-EXPOSE 3000
-
-CMD ["/budgie"]
+# Deploy stage
+FROM alpine:3.13
+WORKDIR /app
+COPY --from=build /app/bin/app .
+CMD ["./app"]
