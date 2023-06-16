@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -68,6 +69,16 @@ func (a *APIServer) ConfigureServer() {
 	a.Router.Use(middleware.RequestID)
 	a.Router.Use(middleware.Recoverer)
 	a.Router.Use(middleware.Compress(5))
+
+	a.Router.Use(func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			fmt.Println("Request from: ", r.RemoteAddr)
+
+			next.ServeHTTP(w, r)
+		}
+
+		return http.HandlerFunc(fn)
+	})
 
 	a.Router.Use(middleware.Timeout(60 * time.Second))
 
