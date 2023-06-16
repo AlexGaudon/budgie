@@ -24,7 +24,7 @@ const createTransactionSchema = z.object({
 
 export type CreateTransactionForm = z.infer<typeof createTransactionSchema>;
 
-export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
+export const AddTransaction = () => {
     const {
         register,
         handleSubmit,
@@ -61,8 +61,7 @@ export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
         };
 
         await createTransactionMutation.mutateAsync(input);
-
-        onFinish();
+        reset();
     };
 
     return (

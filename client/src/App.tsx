@@ -16,7 +16,7 @@ function App() {
     if (auth.user != null) {
         return (
             <div>
-                <AddTransaction onFinish={() => {}}></AddTransaction>
+                <AddTransaction></AddTransaction>
             </div>
         );
     }
