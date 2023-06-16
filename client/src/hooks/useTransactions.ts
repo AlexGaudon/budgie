@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import { type Transaction, transactionSchema } from "../types";
 import { CreateTransactionForm } from "../components/AddTransaction";
-import { useCategoriesQuery } from "./useCategories";
 
 const fetchTransactions = async (filter: string|undefined) => {
     const res = await fetch("/api/transactions");
@@ -58,15 +57,7 @@ export const useCreateTransactionMutation = () => {
 export const useUpdateTransactionMutation = () => {
     const queryClient = useQueryClient();
 
-    let {data: categories}= useCategoriesQuery();
-    let income = categories?.find(x => x.name === 'Income');
-
     return useMutation(async (transaction: Transaction) => {
-        console.log('category: ' + transaction.category);
-        console.log('category: ' + transaction.category_id);
-        if (transaction.category_id == income?.id) {
-            transaction.type='income';
-        }
         const res = await fetch(`/api/transactions/${transaction.id}`, {
             method: "PUT",
             body: JSON.stringify({

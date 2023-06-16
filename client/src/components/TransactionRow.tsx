@@ -46,6 +46,14 @@ export const TransactionRow = ({
             const er = { ...prevEditedRow };
             if (field === "date") {
                 er.date = new Date(event.target.value);
+            } else if (field === "type") {
+                let res = event.target.value;
+                console.log("res: " + res);
+                if (res) {
+                    er[field] = "income";
+                } else {
+                    er[field] = "expense";
+                }
             } else {
                 er[field] = event.target.value;
             }
@@ -160,7 +168,22 @@ export const TransactionRow = ({
                 )}
             </td>
             <td className="px-4 py-2 text-left">
-                <button onClick={handleDelete}>DELETE</button>
+                {editing ? (
+                    <div className="flex">
+                        <label htmlFor="income">Income</label>
+                        <input
+                            className="ml-2"
+                            id="income"
+                            type="checkbox"
+                            defaultChecked={editedRow.type === "income"}
+                            onChange={(e) => {
+                                handleChange(e, "type");
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <button onClick={handleDelete}>DELETE</button>
+                )}
             </td>
         </tr>
     );
