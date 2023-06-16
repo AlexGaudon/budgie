@@ -4,6 +4,7 @@ import { useAuth } from "./hooks/useAuth";
 import { Login } from "./pages/Login";
 
 import LandingPage from "./pages/Landing";
+import { AddTransaction } from "./components/AddTransaction";
 
 function App() {
     let auth = useAuth();
@@ -15,8 +16,7 @@ function App() {
     if (auth.user != null) {
         return (
             <div>
-                <h1>Hello {auth.user.username}</h1>
-                <br />
+                <AddTransaction onFinish={() => {}}></AddTransaction>
             </div>
         );
     }
