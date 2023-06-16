@@ -68,7 +68,7 @@ export const AddTransaction = ({ onFinish }: { onFinish: () => void }) => {
     return (
         <div className="flex items-center justify-center h-full w-8/12">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4">
                     <label htmlFor="vendor">Vendor</label>
                     <input
                         id="vendor"
