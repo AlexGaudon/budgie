@@ -19,6 +19,7 @@ export const Transactions = () => {
         <div>
             <button
                 onClick={() => {
+                    console.log("adding");
                     setIsAdding(true);
                     setTimeout(() => {
                         setIsAdding(false);

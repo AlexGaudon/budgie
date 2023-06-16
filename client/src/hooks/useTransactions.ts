@@ -27,6 +27,10 @@ export const useCreateTransactionMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation(async (transaction: CreateTransactionForm) => {
+        if (transaction.category == 'Income') {
+            console.log('is income')
+            transaction.type = 'income';
+        }
         const res = await fetch("/api/transactions", {
             method: "POST",
             body: JSON.stringify({
@@ -58,6 +62,9 @@ export const useUpdateTransactionMutation = () => {
     const queryClient = useQueryClient();
 
     return useMutation(async (transaction: Transaction) => {
+        if (transaction.category == 'Income') {
+            transaction.type = 'income';
+        }
         const res = await fetch(`/api/transactions/${transaction.id}`, {
             method: "PUT",
             body: JSON.stringify({
