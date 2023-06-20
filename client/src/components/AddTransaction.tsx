@@ -65,9 +65,9 @@ export const AddTransaction = () => {
     };
 
     return (
-        <div className="flex items-center justify-center h-full w-8/12">
+        <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid gap-4">
+                <div className="grid gap-2">
                     <label htmlFor="vendor">Vendor</label>
                     <input
                         id="vendor"
@@ -138,35 +138,29 @@ export const AddTransaction = () => {
                         })}
                         className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <label>Transaction Type</label>
-                    <div>
-                        <label htmlFor="field-expense" className="mr-2">
-                            <input
-                                className="mr-1"
-                                {...register("type")}
-                                type="radio"
-                                value="expense"
-                                id="field-expense"
-                            />
-                            Expense
-                        </label>
 
-                        <label htmlFor="field-income">
-                            <input
-                                className="mr-1"
-                                {...register("type")}
-                                type="radio"
-                                value="income"
-                                id="field-income"
-                            />
-                            Income
-                        </label>
-                    </div>
+                    <label htmlFor="transactionType">Transaction Type</label>
+                    <select
+                        id="transactionType"
+                        className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        {...register("type")}
+                    >
+                        {[
+                            { name: "income", label: "Income" },
+                            { name: "expense", label: "Expense" },
+                        ]?.map((c) => {
+                            return (
+                                <option key={c.name} value={c.name}>
+                                    {c.label}
+                                </option>
+                            );
+                        })}
+                    </select>
                 </div>
-
+                <br />
                 <input
                     type="submit"
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor:pointer"
+                    className="float-right bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md cursor:pointer w-36"
                 />
             </form>
         </div>
