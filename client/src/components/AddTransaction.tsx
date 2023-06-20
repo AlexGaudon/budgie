@@ -1,10 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCategoriesQuery } from "../hooks/useCategories";
-import { useCreateTransactionMutation } from "../hooks/useTransactions";
+import {
+    useCreateTransactionMutation,
+    useTransactionQuery,
+} from "../hooks/useTransactions";
 
 const createTransactionSchema = z.object({
     vendor: z.string(),
@@ -46,10 +49,6 @@ export const AddTransaction = () => {
 
     const createTransactionMutation = useCreateTransactionMutation();
 
-    if (categoryLoading) {
-        return <h1>Loading...</h1>;
-    }
-
     const onSubmit: SubmitHandler<CreateTransactionForm> = async (data) => {
         let input = {
             vendor: data.vendor,
@@ -64,10 +63,38 @@ export const AddTransaction = () => {
         reset();
     };
 
+    const { data: transactions } = useTransactionQuery(undefined);
+
+    const [vendorOptions, setVendorOptions] = useState<string[]>([]);
+
+    useEffect(() => {
+        let vendorOpts: string[] = [];
+
+        if (transactions === undefined) {
+            setVendorOptions(vendorOpts);
+            return;
+        }
+
+        for (let tran of transactions) {
+            vendorOpts.push(tran.vendor);
+        }
+
+        setVendorOptions(vendorOpts);
+    }, [transactions]);
+
+    if (categoryLoading) {
+        return <h1>Loading...</h1>;
+    }
+
     return (
         <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid gap-2">
+                    <datalist id="vendorInputList">
+                        {vendorOptions?.map((x) => {
+                            return <option value={x}></option>;
+                        })}
+                    </datalist>
                     <label htmlFor="vendor">Vendor</label>
                     <input
                         id="vendor"
@@ -78,6 +105,7 @@ export const AddTransaction = () => {
                             required: true,
                             maxLength: 80,
                         })}
+                        list="vendorInputList"
                         className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
 

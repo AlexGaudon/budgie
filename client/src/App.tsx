@@ -1,8 +1,6 @@
 import "./App.css";
 import { useAuth } from "./hooks/useAuth";
 
-import { Login } from "./pages/Login";
-
 import LandingPage from "./pages/Landing";
 import { AddTransaction } from "./components/AddTransaction";
 
