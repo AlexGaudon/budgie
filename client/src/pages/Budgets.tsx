@@ -153,6 +153,7 @@ export const Budgets = () => {
             >
                 Add Budget
             </button>
+
             {isCreating && (
                 <AddBudget
                     onFinish={() => {

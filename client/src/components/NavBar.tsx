@@ -40,7 +40,8 @@ export const NavBar = () => {
                     <div className="flex items-center">
                         <div className="flex-shrink-0">
                             <Link to="/">
-                                Bu<span className="text-blue-500">dg</span>ie
+                                Bu<span className="text-blue-500">dg</span>
+                                ie
                             </Link>
                         </div>
                         <div className="hidden md:block">
