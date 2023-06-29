@@ -32,6 +32,7 @@ export const AddTransaction = () => {
         register,
         handleSubmit,
         formState: { errors },
+        setValue,
         reset,
     } = useForm<CreateTransactionForm>({
         resolver: zodResolver(createTransactionSchema),
@@ -86,13 +87,32 @@ export const AddTransaction = () => {
         return <h1>Loading...</h1>;
     }
 
+    let vendorField = register("vendor", {
+        required: true,
+        maxLength: 80,
+    });
+
+    const vendorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        vendorField.onChange(e);
+        console.log("customthing " + e.target.value);
+        let transactionWithVendor = transactions?.find(
+            (x) => x.vendor == e.target.value
+        );
+
+        console.log(transactionWithVendor);
+
+        if (transactionWithVendor?.category_id !== undefined) {
+            setValue("category", transactionWithVendor.category_id);
+        }
+    };
+
     return (
         <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid gap-2">
                     <datalist id="vendorInputList">
                         {vendorOptions?.map((x) => {
-                            return <option value={x}></option>;
+                            return <option key={x} value={x}></option>;
                         })}
                     </datalist>
                     <label htmlFor="vendor">Vendor</label>
@@ -101,10 +121,10 @@ export const AddTransaction = () => {
                         autoComplete="off"
                         type="text"
                         placeholder="Walmart"
-                        {...register("vendor", {
-                            required: true,
-                            maxLength: 80,
-                        })}
+                        {...vendorField}
+                        onChange={(e) => {
+                            vendorChange(e);
+                        }}
                         list="vendorInputList"
                         className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
