@@ -7,6 +7,10 @@ import { AddTransaction } from "./components/AddTransaction";
 function App() {
     let auth = useAuth();
 
+    if (auth.isLoading) {
+        return <p>Loading...</p>;
+    }
+
     if (auth.user != null) {
         return (
             <div>
