@@ -83,10 +83,6 @@ export const AddTransaction = () => {
         setVendorOptions(vendorOpts);
     }, [transactions]);
 
-    if (categoryLoading) {
-        return <h1>Loading...</h1>;
-    }
-
     let vendorField = register("vendor", {
         required: true,
         maxLength: 80,
