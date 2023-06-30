@@ -110,7 +110,7 @@ export const Budgets = () => {
         <div>
             <div className="flex items-center space-x-4">
                 <select
-                    className="rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="rounded-md shadow-sm border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 border-2"
                     value={year}
                     onChange={(e) => {
                         setYear(e.target.value);
@@ -123,7 +123,7 @@ export const Budgets = () => {
                 </select>
 
                 <select
-                    className="rounded-md shadow-sm border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="rounded-md shadow-sm border-gray-500 focus:border-indigo-500 focus:ring-indigo-500 border-2"
                     value={month}
                     onChange={(e) => {
                         setMonth(e.target.value);
@@ -146,7 +146,7 @@ export const Budgets = () => {
             </div>
 
             <button
-                className="bg-blue-300 text-gray-900 px-3 py-2 rounded-md text-sm font-medium mb-4"
+                className="bg-blue-400 text-gray-800 px-3 py-2 rounded-md text-sm font-medium mb-4"
                 onClick={() => {
                     setIsCreating(true);
                 }}
@@ -162,6 +162,20 @@ export const Budgets = () => {
                 ></AddBudget>
             )}
             <div className="grid md:grid-cols-3 gap-4">
+                {budgets?.length == 0 && (
+                    <button
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                        onClick={async () => {
+                            let res = await fetch(
+                                "/api/budgets/copy-last-period-budgets"
+                            );
+
+                            console.log(res);
+                        }}
+                    >
+                        Copy Last Month's Budgets
+                    </button>
+                )}
                 {budgets?.map((budget) => {
                     return (
                         <Budget

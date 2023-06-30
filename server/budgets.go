@@ -30,7 +30,63 @@ func (s *APIServer) registerBudgets() {
 		r.Post("/", s.WithUser(MakeHandler(s.createBudget)))
 
 		r.Delete("/{id}", s.WithUser(MakeHandler(s.deleteBudget)))
+
+		r.Get("/copy-last-period-budgets", s.WithUser(MakeHandler(s.copyLastPeriodsBudgets)))
 	})
+}
+
+func (s *APIServer) copyLastPeriodsBudgets(w http.ResponseWriter, r *http.Request) *Response {
+	lastPeriod, err := time.Parse("2006-01", time.Now().AddDate(0, -1, 0).Format("2006-01"))
+	if err != nil {
+		return &Response{Status: http.StatusBadRequest, Content: JSON{
+			"error": err.Error(),
+		}}
+	}
+
+	user := r.Context().Value(ContextKey("user")).(*models.User)
+
+	err = s.copyBudgetsFromPeriod(user.ID, lastPeriod)
+
+	if err != nil {
+		return &Response{Status: http.StatusBadRequest, Content: JSON{
+			"error": err.Error(),
+		}}
+	}
+
+	return &Response{
+		Status: http.StatusOK,
+		Content: JSON{
+			"data": "ok",
+		},
+	}
+}
+
+func (s *APIServer) copyBudgetsFromPeriod(userId string, period time.Time) error {
+	budgets, err := s.getBudgetsForPeriod(userId, period)
+
+	if err != nil {
+		return err
+	}
+	if len(budgets) > 0 {
+		for _, budget := range budgets {
+			period, err := time.Parse("2006-01", time.Now().Format("2006-01"))
+
+			if err != nil {
+				return err
+			}
+
+			budget.Period = period
+			budget.Category = budget.CategoryID
+			budget.ID = ""
+
+			_, err = s.DB.Budgets.Save(budget)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *APIServer) getBudgetsForPeriod(userId string, period time.Time) ([]*models.Budget, error) {

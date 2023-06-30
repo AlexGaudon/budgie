@@ -142,6 +142,8 @@ func (r *BudgetsRepo) create(b *Budget) (*Budget, error) {
 
 	row := r.DB.QueryRow(query, b.UserID, b.Category, b.Amount, b.Period)
 
+	fmt.Println("values, ", b.UserID, b.Category, b.Amount, b.Period)
+
 	err := row.Scan(&b.ID, &b.CreatedAt, &b.UpdatedAt, &b.DeletedAt)
 
 	if err != nil {
