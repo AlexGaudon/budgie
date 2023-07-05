@@ -1,3 +1,9 @@
+
+deploy:
+	git pull
+	make build
+	docker-compose up --build -d
+
 build:
 	go build -o bin/budgie cmd/server/main.go
 	cd client && npm run build && cd ..

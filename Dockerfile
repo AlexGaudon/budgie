@@ -8,4 +8,7 @@ RUN ls && go build -o bin/app cmd/server/main.go
 FROM alpine:3.13
 WORKDIR /app
 COPY --from=build /app/bin/app .
+COPY .env .env
+COPY ./migrations ./migrations
+COPY ./client ./client
 CMD ["./app"]
