@@ -28,9 +28,13 @@ export const TransactionTable = ({ isAdding }: TransactionTableProps) => {
 
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
-    const filter = searchParams.get("filter") as string | undefined;
+    const category = searchParams.get("category") as string | undefined;
+    const period = searchParams.get("period") as string | undefined;
 
-    const { data: transactions, isLoading } = useTransactionQuery(filter);
+    const { data: transactions, isLoading } = useTransactionQuery(
+        category,
+        period
+    );
 
     useEffect(() => {
         if (isAdding) {

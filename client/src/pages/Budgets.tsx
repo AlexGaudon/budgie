@@ -44,9 +44,9 @@ export const Budget = ({
             <div className="w-full">
                 <p>
                     <Link
-                        to={`/transactions?filter=${encodeURIComponent(
+                        to={`/transactions?category=${encodeURIComponent(
                             category
-                        )}`}
+                        )}&period=${new Date().toISOString().substring(0, 7)}`}
                     >
                         {category}
                     </Link>
