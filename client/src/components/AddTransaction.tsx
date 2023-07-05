@@ -64,7 +64,7 @@ export const AddTransaction = () => {
         reset();
     };
 
-    const { data: transactions } = useTransactionQuery(undefined);
+    const { data: transactions } = useTransactionQuery(undefined, undefined);
 
     const [vendorOptions, setVendorOptions] = useState<string[]>([]);
 
