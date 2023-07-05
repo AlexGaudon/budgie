@@ -6,6 +6,9 @@ dev:
 	go build -o bin/budgie cmd/server/main.go
 	./bin/budgie
 
+web:
+	cd client && npm run dev && cd ..
+
 run: build
 	./bin/budgie
 
